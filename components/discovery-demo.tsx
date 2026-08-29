@@ -1,137 +1,135 @@
 "use client";
 
 import { FormEvent, useRef, useState } from "react";
-import { ArrowRight, Check, Globe2, LoaderCircle, RotateCcw } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowRight, FileText, Globe2, LoaderCircle } from "lucide-react";
+import { contentFactoryProfile, type BrandProfile } from "@/lib/brand-profile";
 
-type Profile = {
-  name: string;
-  url: string;
-  description: string;
-  themeColor?: string;
-  signals: string[];
-};
+type Mode = "website" | "description";
 
-const kokoroProfile: Profile = {
-  name: "Kokoro",
-  url: "kokoromind.com",
-  description: "A voice-first space to unload your day and receive a meditation made from your own words.",
-  themeColor: "#eea89b",
-  signals: ["voice-first wellness", "quiet, intimate tone", "personalized meditation", "evening decompression"],
-};
-
-function isKokoroDemo(value: string) {
-  if (!value.trim()) return true;
-  const hostname = value.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
-  return hostname === "kokoromind.com" || hostname.endsWith(".kokoromind.com");
+function isPreloadedDemo(value: string) {
+  return !value.trim();
 }
 
 const wait = (duration: number) => new Promise((resolve) => window.setTimeout(resolve, duration));
 
 export function DiscoveryDemo() {
+  const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
+  const [mode, setMode] = useState<Mode>("website");
   const [url, setUrl] = useState("");
-  const [status, setStatus] = useState<"idle" | "scanning" | "ready" | "error">("idle");
-  const [profile, setProfile] = useState<Profile>(kokoroProfile);
+  const [description, setDescription] = useState("");
+  const [status, setStatus] = useState<"idle" | "scanning" | "error">("idle");
   const [error, setError] = useState("");
-  const [briefBuilt, setBriefBuilt] = useState(false);
+
+  function selectMode(nextMode: Mode) {
+    setMode(nextMode);
+    setError("");
+    setStatus("idle");
+    window.requestAnimationFrame(() => {
+      if (nextMode === "website") inputRef.current?.focus();
+      else descriptionRef.current?.focus();
+    });
+  }
+
+  function openWorkspace(profile: BrandProfile) {
+    window.sessionStorage.setItem("content-factory-profile", JSON.stringify(profile));
+    router.push("/workspace");
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
-    setBriefBuilt(false);
     setStatus("scanning");
 
-    if (isKokoroDemo(url)) {
-      await wait(650);
-      setProfile(kokoroProfile);
-      setStatus("ready");
+    if (mode === "website" && isPreloadedDemo(url)) {
+      await wait(720);
+      openWorkspace(contentFactoryProfile);
       return;
     }
 
     try {
-      const response = await fetch("/api/discover", {
+      const request = fetch("/api/discover", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify(mode === "website" ? { url } : { description }),
       });
+      const [response] = await Promise.all([request, wait(720)]);
       const data = await response.json();
-      if (!response.ok) throw new Error();
-      setProfile(data.profile);
-      setStatus("ready");
-    } catch {
-      setError("We couldn’t read that site. Check the URL or try another public homepage.");
+      if (!response.ok) throw new Error(data.error || "We could not read that context.");
+      openWorkspace(data.profile);
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "We could not read that context.");
       setStatus("error");
-      inputRef.current?.focus();
+      if (mode === "website") inputRef.current?.focus();
+      else descriptionRef.current?.focus();
     }
-  }
-
-  function reset() {
-    setUrl("");
-    setStatus("idle");
-    setError("");
-    setBriefBuilt(false);
   }
 
   return (
     <section className={`hero-discovery status-${status}`} id="demo" aria-label="Discover your app">
       <div className="discovery-overline">
-        <span>Start here</span>
-        <span><i /> Kokoro demo preloaded</span>
+        <span>Build your Brand OS</span>
+        <span><i /> Brand OS demo preloaded</span>
       </div>
 
-      <form className="hero-discovery-form" onSubmit={handleSubmit} noValidate>
-        <div className="discovery-url-field">
-          <Globe2 size={20} aria-hidden="true" />
-          <label className="sr-only" htmlFor="website-url">App website</label>
-          <input
-            ref={inputRef}
-            id="website-url"
-            name="website"
-            type="url"
-            inputMode="url"
-            autoComplete="off"
-            value={url}
-            onChange={(event) => setUrl(event.target.value)}
-            placeholder="https://kokoromind.com…"
-            aria-invalid={status === "error"}
-            aria-describedby="discovery-status"
-          />
-        </div>
+      <div className="discovery-mode-tabs" role="tablist" aria-label="How should we learn your app?">
+        <button type="button" role="tab" aria-selected={mode === "website"} onClick={() => selectMode("website")}>
+          <Globe2 size={15} aria-hidden="true" /> Website
+        </button>
+        <button type="button" role="tab" aria-selected={mode === "description"} onClick={() => selectMode("description")}>
+          <FileText size={15} aria-hidden="true" /> No website yet
+        </button>
+      </div>
+
+      <form className={`hero-discovery-form mode-${mode}`} onSubmit={handleSubmit} noValidate>
+        {mode === "website" ? (
+          <div className="discovery-url-field">
+            <Globe2 size={20} aria-hidden="true" />
+            <label className="sr-only" htmlFor="website-url">App website</label>
+            <input
+              ref={inputRef}
+              id="website-url"
+              name="website"
+              type="url"
+              inputMode="url"
+              autoComplete="url"
+              value={url}
+              onChange={(event) => setUrl(event.target.value)}
+              placeholder="https://yourapp.com…"
+              aria-invalid={status === "error"}
+              aria-describedby="discovery-status"
+            />
+          </div>
+        ) : (
+          <div className="discovery-description-field">
+            <label className="sr-only" htmlFor="product-description">Product description</label>
+            <textarea
+              ref={descriptionRef}
+              id="product-description"
+              name="description"
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              placeholder="What does your app do, who is it for, and what painful problem does it solve?"
+              aria-invalid={status === "error"}
+              aria-describedby="discovery-status"
+            />
+          </div>
+        )}
         <button type="submit" disabled={status === "scanning"}>
-          <span>{status === "scanning" ? "Reading…" : "Discover App"}</span>
+          <span>{status === "scanning" ? "Mapping…" : mode === "website" ? "Discover app" : "Build Brand OS"}</span>
           {status === "scanning" ? <LoaderCircle className="spin" size={19} aria-hidden="true" /> : <ArrowRight size={19} aria-hidden="true" />}
         </button>
       </form>
 
       <div className="hero-discovery-state" id="discovery-status" aria-live="polite">
-        {status === "idle" ? (
-          <p>Paste any app website—or click Discover App to use Kokoro.</p>
-        ) : status === "scanning" ? (
-          <div className="compact-progress"><i /></div>
+        {status === "scanning" ? (
+          <div className="compact-progress" aria-label="Mapping product, audience, and content opportunities"><i /></div>
         ) : status === "error" ? (
           <p className="compact-error" role="alert">{error}</p>
         ) : (
-          <div className="compact-profile">
-            <div className="compact-app" style={{ background: profile.themeColor ?? "#c8ff5c" }}>
-              {profile.name.slice(0, 1).toLowerCase()}
-            </div>
-            <div className="compact-profile-copy">
-              <span><Check size={13} aria-hidden="true" /> App Discovered</span>
-              <strong>{profile.name}</strong>
-              <small>{profile.signals.length} brand signals matched</small>
-            </div>
-            <button
-              className="compact-build-button"
-              type="button"
-              onClick={() => setBriefBuilt(true)}
-              disabled={briefBuilt}
-            >
-              {briefBuilt ? <><Check size={16} aria-hidden="true" /> Brief Ready</> : <>Build Brief <ArrowRight size={16} aria-hidden="true" /></>}
-            </button>
-            <button className="compact-reset" type="button" onClick={reset} aria-label="Try another website">
-              <RotateCcw size={15} aria-hidden="true" />
-            </button>
-          </div>
+          <p>{mode === "website" ? "Paste any app website—or run the preloaded Content Factory demo." : "Your description stays editable in the Brand OS."}</p>
         )}
       </div>
     </section>

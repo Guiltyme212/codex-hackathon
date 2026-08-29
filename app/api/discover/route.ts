@@ -3,10 +3,105 @@ import { isIP } from "node:net";
 import * as cheerio from "cheerio";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import type { BrandProfile } from "@/lib/brand-profile";
 
 export const runtime = "nodejs";
 
-const requestSchema = z.object({ url: z.string().trim().min(1).max(2048) });
+const requestSchema = z
+  .object({
+    url: z.string().trim().max(2048).optional(),
+    description: z.string().trim().max(50_000).optional(),
+  })
+  .refine((value) => Boolean(value.url || (value.description && value.description.length >= 20)), {
+    message: "Add a website or at least 20 characters of product context.",
+  });
+
+const clean = (value: string) => value.replace(/\s+/g, " ").trim();
+
+function unique(values: string[]) {
+  return [...new Set(values.map(clean).filter(Boolean))];
+}
+
+function firstSentence(value: string) {
+  const sentence = clean(value).split(/(?<=[.!?])\s/)[0];
+  return sentence.slice(0, 260).replace(/[.!?]?$/, ".");
+}
+
+function inferAudience(copy: string) {
+  const normalized = copy.toLowerCase();
+  if (/developer|api|code|software team/.test(normalized)) return ["Developers and product teams", "Technical founders", "Teams shipping software"];
+  if (/founder|startup|saas|business/.test(normalized)) return ["App founders", "Small product teams", "People responsible for growth"];
+  if (/wellness|meditat|mental|health|calm/.test(normalized)) return ["People building healthier routines", "Busy adults", "Wellness-minded users"];
+  if (/creator|content|social|marketing/.test(normalized)) return ["Creators and marketers", "Founder-led brands", "Small growth teams"];
+  if (/learn|student|course|education/.test(normalized)) return ["Curious learners", "Students and educators", "People building a new skill"];
+  return ["People actively looking for this outcome", "Early adopters", "Customers frustrated by existing options"];
+}
+
+function buildProfile(input: {
+  name: string;
+  url: string;
+  description: string;
+  image?: string;
+  themeColor?: string;
+  headings?: string[];
+  keywords?: string[];
+  sourceLabel: string;
+}): BrandProfile {
+  const headings = unique(input.headings ?? []).filter((heading) => heading.length > 8 && heading.length < 140);
+  const sourceCopy = [input.name, input.description, ...headings, ...(input.keywords ?? [])].join(" ");
+  const audience = inferAudience(sourceCopy);
+  const proofHeadings = headings.slice(0, 3);
+  const benefits = unique([
+    ...proofHeadings,
+    `Reach the outcome without the usual complexity`,
+    `Get value from the first session`,
+  ]).slice(0, 3);
+
+  return {
+    name: input.name,
+    url: input.url,
+    description: input.description,
+    image: input.image,
+    themeColor: input.themeColor,
+    signals: unique([
+      input.keywords?.[0] ?? "Website positioning",
+      input.keywords?.[1] ?? "Audience language",
+      headings[0] ?? "Core product promise",
+      input.image ? "Visual identity" : "Founder-supplied context",
+    ]).slice(0, 4),
+    product: firstSentence(input.description),
+    audience,
+    problem: `The audience needs the outcome ${input.name} promises, but current options still feel slow, generic, or difficult to sustain.`,
+    benefits,
+    tone: ["Clear and human", "Confident without hype", "Specific and product-led"],
+    avoid: ["Generic AI phrasing", "Claims without proof", "Feature lists without an outcome"],
+    positioning: `${input.name} helps ${audience[0].toLowerCase()} reach the promised outcome with less friction and more clarity.`,
+    mission: `Make the product’s value obvious, useful, and easier to act on.`,
+    evidence: unique([
+      ...proofHeadings.map((heading) => `“${heading}”`),
+      `${input.sourceLabel} description`,
+    ]).slice(0, 3),
+    contentAngles: [
+      `The problem ${audience[0].toLowerCase()} rarely say out loud`,
+      `What changes before and after ${input.name}`,
+      `The fastest way to understand why ${input.name} exists`,
+      `A founder’s honest take on the old way`,
+      `Show the product moment that makes the benefit click`,
+    ],
+  };
+}
+
+function profileFromDescription(description: string) {
+  const nameMatch = description.match(/(?:called|named|app is|product is)\s+["“]?([A-Z][\w-]{1,30})/i);
+  const name = nameMatch?.[1] ?? "Your app";
+  return buildProfile({
+    name,
+    url: "Founder brief",
+    description: firstSentence(description),
+    headings: description.split(/\n+/).slice(0, 6),
+    sourceLabel: "Founder-provided",
+  });
+}
 
 function normalizeUrl(input: string) {
   const candidate = /^https?:\/\//i.test(input) ? input : `https://${input}`;
@@ -76,8 +171,13 @@ async function fetchPublicWebsite(startUrl: URL, signal: AbortSignal) {
 export async function POST(request: Request) {
   try {
     const parsed = requestSchema.safeParse(await request.json());
-    if (!parsed.success) return NextResponse.json({ error: "Enter a valid website address." }, { status: 400 });
-    const website = normalizeUrl(parsed.data.url);
+    if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Add your app context." }, { status: 400 });
+
+    if (parsed.data.description && !parsed.data.url) {
+      return NextResponse.json({ profile: profileFromDescription(parsed.data.description) });
+    }
+
+    const website = normalizeUrl(parsed.data.url ?? "");
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 9000);
     const { response, finalUrl } = await fetchPublicWebsite(website, controller.signal).finally(() => clearTimeout(timeout));
@@ -88,28 +188,24 @@ export async function POST(request: Request) {
     const $ = cheerio.load(html);
 
     const title = $('meta[property="og:site_name"]').attr("content") || $('meta[property="og:title"]').attr("content") || $("title").text() || finalUrl.hostname;
-    const name = title.split(/\s[|—–]\s/)[0].trim().slice(0, 80);
-    const description = ($('meta[property="og:description"]').attr("content") || $('meta[name="description"]').attr("content") || "We found the website. Add a short product description before generating content.").trim().slice(0, 300);
+    const name = clean(title).split(/\s[|—–]\s/)[0].trim().slice(0, 80);
+    const description = clean($('meta[property="og:description"]').attr("content") || $('meta[name="description"]').attr("content") || $("h1").first().text() || "We found the website. Add a short product description before generating content.").slice(0, 400);
     const image = absoluteAsset($('meta[property="og:image"]').attr("content") || $('link[rel~="icon"]').attr("href"), finalUrl);
     const themeColor = $('meta[name="theme-color"]').attr("content");
     const keywords = ($('meta[name="keywords"]').attr("content") || "").split(",").map((item) => item.trim()).filter(Boolean);
-    const signals = [
-      keywords[0] || "website positioning",
-      keywords[1] || "audience language",
-      "brand voice",
-      image ? "visual identity" : "content opportunity",
-    ];
-
-    return NextResponse.json({
-      profile: {
-        name,
-        url: finalUrl.toString(),
-        description,
-        image,
-        themeColor,
-        signals,
-      },
+    const headings = unique($("h1, h2").map((_, element) => $(element).text()).get()).slice(0, 8);
+    const profile = buildProfile({
+      name,
+      url: finalUrl.toString(),
+      description,
+      image,
+      themeColor,
+      headings,
+      keywords,
+      sourceLabel: finalUrl.hostname,
     });
+
+    return NextResponse.json({ profile });
   } catch (error) {
     const message = error instanceof Error && error.name !== "AbortError" ? error.message : "The website took too long to respond.";
     return NextResponse.json({ error: message }, { status: 422 });

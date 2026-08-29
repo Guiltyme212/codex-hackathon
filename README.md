@@ -7,10 +7,12 @@ This hackathon build starts with a prominent website-discovery flow: paste an ap
 ## Current milestone
 
 - Editorial, responsive homepage
-- One-click Kokoro discovery demo
-- Live public-website metadata discovery
-- Seeded campaign studio preview
-- Mobile layout with a compact horizontal campaign rail
+- Website or founder-description onboarding
+- Live public-website discovery with SSRF protection
+- Editable Brand OS for positioning, audience, proof, and voice
+- Tinder-style Blitz deck with mouse, touch, and keyboard decisions
+- Manual content creation mode with a working preview
+- Responsive app workspace and seeded judge-friendly demo
 
 ## Stack
 
@@ -32,4 +34,8 @@ npm run build
 
 ## Next milestone
 
-Convert the discovered app profile into an editable content brief, then generate a real first campaign from that brief.
+Turn approved ideas into a complete, editable launch campaign and publishing calendar.
+
+## Development workflow
+
+Built with Codex, reviewed through Reflex on Runloop, deployed automatically from GitHub to Railway.
