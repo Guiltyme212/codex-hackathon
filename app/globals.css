@@ -2523,9 +2523,14 @@ select:focus-visible {
   flex-direction: column;
   padding: 25px 27px 22px;
   cursor: grab;
-  touch-action: none;
+  touch-action: pan-y;
   user-select: none;
   will-change: transform;
+}
+
+.active-swipe-card:focus-visible {
+  outline: 4px solid var(--workspace-ink);
+  outline-offset: 5px;
 }
 
 .active-swipe-card:active {

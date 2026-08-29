@@ -117,9 +117,13 @@ export function BrandOsWorkspace() {
   const [manualFormat, setManualFormat] = useState("Founder story");
   const [manualNote, setManualNote] = useState("");
   const [manualDraftReady, setManualDraftReady] = useState(false);
+  const [manualDraft, setManualDraft] = useState("");
+  const [campaignBuilt, setCampaignBuilt] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
+  const resetDeckRef = useRef<HTMLButtonElement>(null);
   const keepOverlayRef = useRef<HTMLDivElement>(null);
   const passOverlayRef = useRef<HTMLDivElement>(null);
+  const animationRef = useRef<Animation | null>(null);
   const drag = useRef({ active: false, pointerId: -1, startX: 0, startAt: 0, x: 0 });
 
   useEffect(() => {
@@ -158,6 +162,7 @@ export function BrandOsWorkspace() {
   }
 
   function finishDecision(decision: Decision, idea: SwipeIdea) {
+    const completesDeck = ideaIndex + 1 >= ideas.length;
     if (decision === "keep") {
       setKept((current) => [...current, idea]);
       setAnnouncement(`Kept “${idea.hook}”.`);
@@ -166,10 +171,12 @@ export function BrandOsWorkspace() {
       setAnnouncement(`Passed “${idea.hook}”.`);
     }
     setIdeaIndex((current) => current + 1);
+    setCampaignBuilt(false);
     setBusy(false);
     window.requestAnimationFrame(() => {
       resetCardStyles();
-      cardRef.current?.focus();
+      if (completesDeck) resetDeckRef.current?.focus();
+      else cardRef.current?.focus();
     });
   }
 
@@ -186,15 +193,22 @@ export function BrandOsWorkspace() {
     setBusy(true);
     const direction = decision === "keep" ? 1 : -1;
     const startingTransform = card.style.transform || "translate3d(0, 0, 0) rotate(0deg)";
-    card
-      .animate(
+    animationRef.current = card.animate(
         [
           { transform: startingTransform, opacity: 1 },
           { transform: `translate3d(${direction * 620}px, -14px, 0) rotate(${direction * 16}deg)`, opacity: 0 },
         ],
         { duration: 220, easing: "cubic-bezier(.23, 1, .32, 1)", fill: "forwards" },
-      )
-      .finished.then(() => finishDecision(decision, idea));
+      );
+    animationRef.current.finished
+      .then(() => finishDecision(decision, idea))
+      .catch(() => {
+        setBusy(false);
+        resetCardStyles();
+      })
+      .finally(() => {
+        animationRef.current = null;
+      });
   }
 
   function handlePointerDown(event: ReactPointerEvent<HTMLDivElement>) {
@@ -227,12 +241,21 @@ export function BrandOsWorkspace() {
     }
 
     const startingTransform = cardRef.current.style.transform;
-    cardRef.current
-      .animate(
+    animationRef.current = cardRef.current.animate(
         [{ transform: startingTransform }, { transform: "translate3d(0, 0, 0) rotate(0deg)" }],
         { duration: 190, easing: "cubic-bezier(.23, 1, .32, 1)" },
-      )
-      .finished.then(resetCardStyles);
+      );
+    animationRef.current.finished
+      .then(resetCardStyles)
+      .catch(resetCardStyles)
+      .finally(() => {
+        animationRef.current = null;
+      });
+  }
+
+  function handlePointerCancel() {
+    drag.current.active = false;
+    resetCardStyles();
   }
 
   function handleCardKeyDown(event: KeyboardEvent<HTMLDivElement>) {
@@ -247,15 +270,51 @@ export function BrandOsWorkspace() {
   }
 
   function resetDeck() {
+    animationRef.current?.cancel();
+    animationRef.current = null;
     setIdeaIndex(0);
     setKept([]);
     setPassed(0);
+    setCampaignBuilt(false);
     setAnnouncement("Deck reset. Swipe right to keep an idea, left to pass.");
+  }
+
+  function selectLabMode(nextMode: LabMode) {
+    animationRef.current?.cancel();
+    animationRef.current = null;
+    drag.current.active = false;
+    setBusy(false);
+    resetCardStyles();
+    setMode(nextMode);
+  }
+
+  function handleLabTabKeyDown(event: KeyboardEvent<HTMLButtonElement>, currentMode: LabMode) {
+    const modes: LabMode[] = ["blitz", "manual"];
+    const currentIndex = modes.indexOf(currentMode);
+    let nextIndex = currentIndex;
+
+    if (event.key === "ArrowRight") nextIndex = (currentIndex + 1) % modes.length;
+    else if (event.key === "ArrowLeft") nextIndex = (currentIndex - 1 + modes.length) % modes.length;
+    else if (event.key === "Home") nextIndex = 0;
+    else if (event.key === "End") nextIndex = modes.length - 1;
+    else return;
+
+    event.preventDefault();
+    selectLabMode(modes[nextIndex]);
+    window.requestAnimationFrame(() => document.getElementById(`lab-tab-${modes[nextIndex]}`)?.focus());
   }
 
   function buildManualDraft(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const direction = manualNote.trim() || profile.contentAngles[0];
+    setManualDraft(`${direction} ${profile.name} turns that insight into a clear next step: ${profile.positioning}`);
     setManualDraftReady(true);
+  }
+
+  function buildCampaign() {
+    if (!kept.length) return;
+    setCampaignBuilt(true);
+    setAnnouncement(`${kept.length} approved ideas assembled into a launch campaign.`);
   }
 
   return (
@@ -339,13 +398,13 @@ export function BrandOsWorkspace() {
             <div className="workspace-section-title launch-title">
               <div><span className="workspace-eyebrow">03 / LAUNCH LAB</span><h2>Choose the work worth making.</h2></div>
               <div className="lab-mode-tabs" role="tablist" aria-label="Content creation mode">
-                <button type="button" role="tab" aria-selected={mode === "blitz"} onClick={() => setMode("blitz")}><MousePointer2 size={15} aria-hidden="true" /> Blitz</button>
-                <button type="button" role="tab" aria-selected={mode === "manual"} onClick={() => setMode("manual")}><FilePenLine size={15} aria-hidden="true" /> Manual</button>
+                <button id="lab-tab-blitz" type="button" role="tab" aria-selected={mode === "blitz"} aria-controls="lab-panel-blitz" tabIndex={mode === "blitz" ? 0 : -1} onKeyDown={(event) => handleLabTabKeyDown(event, "blitz")} onClick={() => selectLabMode("blitz")}><MousePointer2 size={15} aria-hidden="true" /> Blitz</button>
+                <button id="lab-tab-manual" type="button" role="tab" aria-selected={mode === "manual"} aria-controls="lab-panel-manual" tabIndex={mode === "manual" ? 0 : -1} onKeyDown={(event) => handleLabTabKeyDown(event, "manual")} onClick={() => selectLabMode("manual")}><FilePenLine size={15} aria-hidden="true" /> Manual</button>
               </div>
             </div>
 
             {mode === "blitz" ? (
-              <div className="swipe-lab">
+              <div id="lab-panel-blitz" role="tabpanel" aria-labelledby="lab-tab-blitz" className="swipe-lab">
                 <div className="swipe-stage">
                   <div className="swipe-stage-heading">
                     <div><span>IDEA {Math.min(ideaIndex + 1, ideas.length)} / {ideas.length}</span><strong>Swipe the launch deck</strong></div>
@@ -362,7 +421,7 @@ export function BrandOsWorkspace() {
                           onPointerDown={handlePointerDown}
                           onPointerMove={handlePointerMove}
                           onPointerUp={handlePointerUp}
-                          onPointerCancel={handlePointerUp}
+                          onPointerCancel={handlePointerCancel}
                           onKeyDown={handleCardKeyDown}
                           role="group"
                           aria-label={`Content idea: ${activeIdea.hook}. Use left arrow to pass or right arrow to keep.`}
@@ -382,7 +441,7 @@ export function BrandOsWorkspace() {
                         <span><Check size={18} aria-hidden="true" /> Deck sorted</span>
                         <h3>{kept.length} ideas made the cut.</h3>
                         <p>Your approved ideas are ready to become a launch campaign.</p>
-                        <button type="button" onClick={resetDeck}><RotateCcw size={15} aria-hidden="true" /> Run the deck again</button>
+                        <button ref={resetDeckRef} type="button" onClick={resetDeck}><RotateCcw size={15} aria-hidden="true" /> Run the deck again</button>
                       </div>
                     )}
                   </div>
@@ -401,12 +460,12 @@ export function BrandOsWorkspace() {
                   ) : (
                     <div className="queue-empty"><ArrowDownRight size={24} aria-hidden="true" /><p>Ideas you keep land here, ready for campaign production.</p></div>
                   )}
-                  <footer><span>{passed} passed</span><button type="button" disabled={!kept.length}>Build campaign <ArrowRight size={15} aria-hidden="true" /></button></footer>
+                  <footer><span>{passed} passed</span><button type="button" disabled={!kept.length} onClick={buildCampaign}>{campaignBuilt ? <><Check size={15} aria-hidden="true" /> Campaign ready</> : <>Build campaign <ArrowRight size={15} aria-hidden="true" /></>}</button></footer>
                 </aside>
                 <p className="sr-only" aria-live="polite">{announcement}</p>
               </div>
             ) : (
-              <div className="manual-lab">
+              <div id="lab-panel-manual" role="tabpanel" aria-labelledby="lab-tab-manual" className="manual-lab">
                 <form onSubmit={buildManualDraft}>
                   <div className="manual-form-heading"><span>Manual creation</span><strong>Start with intent, not a blank prompt.</strong></div>
                   <label>Goal<select value={manualGoal} onChange={(event) => { setManualGoal(event.target.value); setManualDraftReady(false); }}><option>Build awareness</option><option>Explain the product</option><option>Drive signups</option></select></label>
@@ -419,7 +478,7 @@ export function BrandOsWorkspace() {
                   <div className="manual-preview-canvas">
                     <small>{manualFormat} / {manualGoal}</small>
                     <h3>{manualNote.trim() || profile.contentAngles[0]}</h3>
-                    <p>{manualDraftReady ? `Built from ${profile.name}’s positioning, audience, and voice guardrails.` : "Add a direction, then draft a brand-matched first version."}</p>
+                    <p>{manualDraftReady ? manualDraft : "Add a direction, then draft a brand-matched first version."}</p>
                   </div>
                 </div>
               </div>

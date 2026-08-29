@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useRef, useState } from "react";
+import { FormEvent, KeyboardEvent, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, FileText, Globe2, LoaderCircle } from "lucide-react";
 import { contentFactoryProfile, type BrandProfile } from "@/lib/brand-profile";
@@ -31,6 +31,22 @@ export function DiscoveryDemo() {
       if (nextMode === "website") inputRef.current?.focus();
       else descriptionRef.current?.focus();
     });
+  }
+
+  function handleTabKeyDown(event: KeyboardEvent<HTMLButtonElement>, currentMode: Mode) {
+    const modes: Mode[] = ["website", "description"];
+    const currentIndex = modes.indexOf(currentMode);
+    let nextIndex = currentIndex;
+
+    if (event.key === "ArrowRight") nextIndex = (currentIndex + 1) % modes.length;
+    else if (event.key === "ArrowLeft") nextIndex = (currentIndex - 1 + modes.length) % modes.length;
+    else if (event.key === "Home") nextIndex = 0;
+    else if (event.key === "End") nextIndex = modes.length - 1;
+    else return;
+
+    event.preventDefault();
+    selectMode(modes[nextIndex]);
+    window.requestAnimationFrame(() => document.getElementById(`discovery-tab-${modes[nextIndex]}`)?.focus());
   }
 
   function openWorkspace(profile: BrandProfile) {
@@ -75,15 +91,15 @@ export function DiscoveryDemo() {
       </div>
 
       <div className="discovery-mode-tabs" role="tablist" aria-label="How should we learn your app?">
-        <button type="button" role="tab" aria-selected={mode === "website"} onClick={() => selectMode("website")}>
+        <button id="discovery-tab-website" type="button" role="tab" aria-selected={mode === "website"} aria-controls="discovery-panel-website" tabIndex={mode === "website" ? 0 : -1} onKeyDown={(event) => handleTabKeyDown(event, "website")} onClick={() => selectMode("website")}>
           <Globe2 size={15} aria-hidden="true" /> Website
         </button>
-        <button type="button" role="tab" aria-selected={mode === "description"} onClick={() => selectMode("description")}>
+        <button id="discovery-tab-description" type="button" role="tab" aria-selected={mode === "description"} aria-controls="discovery-panel-description" tabIndex={mode === "description" ? 0 : -1} onKeyDown={(event) => handleTabKeyDown(event, "description")} onClick={() => selectMode("description")}>
           <FileText size={15} aria-hidden="true" /> No website yet
         </button>
       </div>
 
-      <form className={`hero-discovery-form mode-${mode}`} onSubmit={handleSubmit} noValidate>
+      <form id={`discovery-panel-${mode}`} role="tabpanel" aria-labelledby={`discovery-tab-${mode}`} className={`hero-discovery-form mode-${mode}`} onSubmit={handleSubmit} noValidate>
         {mode === "website" ? (
           <div className="discovery-url-field">
             <Globe2 size={20} aria-hidden="true" />
