@@ -6,6 +6,11 @@ import { ArrowLeft, Check, ChevronLeft, ChevronRight, Copy, GalleryHorizontalEnd
 import { useEffect, useState } from "react";
 import { carouselRules, seededAlbums, type ContentAlbum } from "@/lib/albums";
 
+function draftVisualVariant(value: string, offset = 0) {
+  const seed = [...value].reduce((total, character) => total + character.charCodeAt(0), 0);
+  return (seed + offset) % 3;
+}
+
 export function AlbumsLibrary() {
   const [albums, setAlbums] = useState<ContentAlbum[]>(seededAlbums);
   const [selectedId, setSelectedId] = useState(seededAlbums[0].id);
@@ -31,6 +36,7 @@ export function AlbumsLibrary() {
 
   const selected = albums.find((album) => album.id === selectedId) ?? albums[0];
   const activeSlide = selected.slides[slideIndex] ?? selected.slides[0];
+  const selectedDraftVariant = draftVisualVariant(selected.id, slideIndex);
 
   function chooseAlbum(album: ContentAlbum) {
     setSelectedId(album.id);
@@ -68,10 +74,20 @@ export function AlbumsLibrary() {
         <section className="album-shelf" aria-label="Campaign albums">
           {albums.map((album) => {
             const cover = album.slides[0]?.image;
+            const draftVariant = draftVisualVariant(album.id);
             return (
               <button key={album.id} type="button" className={album.id === selected.id ? "is-selected" : ""} onClick={() => chooseAlbum(album)}>
-                <div className="album-cover" style={{ backgroundColor: album.accent }}>
-                  {cover ? <Image src={cover} alt="" fill sizes="220px" /> : <div className="draft-cover"><span>{album.brand}</span><strong>{album.title}</strong></div>}
+                <div className="album-cover" style={cover ? { backgroundColor: album.accent } : undefined}>
+                  {cover ? (
+                    <Image src={cover} alt="" fill sizes="220px" />
+                  ) : (
+                    <div className={`draft-cover draft-visual-${draftVariant}`}>
+                      <div className="draft-cover-art" aria-hidden="true"><i /><i /><i /></div>
+                      <span className="draft-cover-label">{album.brand} / campaign draft</span>
+                      <strong>{album.title}</strong>
+                      <small>Hook-led story / 7 slides</small>
+                    </div>
+                  )}
                   <i>{album.slides.length}</i>
                 </div>
                 <span><small>{album.status} / {album.format}</small><strong>{album.title}</strong></span>
@@ -91,7 +107,7 @@ export function AlbumsLibrary() {
               {selected.slides.map((slide, index) => (
                 <button key={slide.id} type="button" className={index === slideIndex ? "is-active" : ""} onClick={() => setSlideIndex(index)} aria-label={`Open slide ${index + 1}`}>
                   <span>{String(index + 1).padStart(2, "0")}</span>
-                  <div style={{ backgroundColor: selected.accent }}>
+                  <div className={!slide.image ? `draft-rail-card draft-visual-${draftVisualVariant(selected.id, index)}` : undefined} style={slide.image ? { backgroundColor: selected.accent } : undefined}>
                     {slide.image ? <Image src={slide.image} alt="" fill sizes="80px" /> : <p>{slide.copy}</p>}
                   </div>
                 </button>
@@ -99,14 +115,15 @@ export function AlbumsLibrary() {
             </aside>
 
             <div className="slide-preview-wrap">
-              <div className="slide-preview" style={{ backgroundColor: selected.accent }}>
+              <div className="slide-preview" style={activeSlide.image ? { backgroundColor: selected.accent } : undefined}>
                 {activeSlide.image ? (
                   <Image src={activeSlide.image} alt={activeSlide.copy} fill priority sizes="(max-width: 760px) 82vw, 430px" />
                 ) : (
-                  <div className="generated-draft-slide">
+                  <div className={`generated-draft-slide draft-visual-${selectedDraftVariant}`}>
+                    <div className="generated-draft-art" aria-hidden="true"><i /><i /><i /></div>
                     <span>{selected.brand} / {activeSlide.role}</span>
                     <h3>{activeSlide.copy}</h3>
-                    <small>Visual prompt ready</small>
+                    <small>Campaign visual / {String(slideIndex + 1).padStart(2, "0")}</small>
                   </div>
                 )}
               </div>
