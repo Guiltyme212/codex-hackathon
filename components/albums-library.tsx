@@ -36,7 +36,8 @@ export function AlbumsLibrary() {
 
   const selected = albums.find((album) => album.id === selectedId) ?? albums[0];
   const activeSlide = selected.slides[slideIndex] ?? selected.slides[0];
-  const selectedDraftVariant = draftVisualVariant(selected.id, slideIndex);
+  const selectedAlbumIndex = albums.indexOf(selected);
+  const selectedDraftVariant = draftVisualVariant(selected.brand, selectedAlbumIndex + slideIndex);
 
   function chooseAlbum(album: ContentAlbum) {
     setSelectedId(album.id);
@@ -72,9 +73,9 @@ export function AlbumsLibrary() {
         </section>
 
         <section className="album-shelf" aria-label="Campaign albums">
-          {albums.map((album) => {
+          {albums.map((album, albumIndex) => {
             const cover = album.slides[0]?.image;
-            const draftVariant = draftVisualVariant(album.id);
+            const draftVariant = draftVisualVariant(album.brand, albumIndex);
             return (
               <button key={album.id} type="button" className={album.id === selected.id ? "is-selected" : ""} onClick={() => chooseAlbum(album)}>
                 <div className="album-cover" style={cover ? { backgroundColor: album.accent } : undefined}>
@@ -107,7 +108,7 @@ export function AlbumsLibrary() {
               {selected.slides.map((slide, index) => (
                 <button key={slide.id} type="button" className={index === slideIndex ? "is-active" : ""} onClick={() => setSlideIndex(index)} aria-label={`Open slide ${index + 1}`}>
                   <span>{String(index + 1).padStart(2, "0")}</span>
-                  <div className={!slide.image ? `draft-rail-card draft-visual-${draftVisualVariant(selected.id, index)}` : undefined} style={slide.image ? { backgroundColor: selected.accent } : undefined}>
+                  <div className={!slide.image ? `draft-rail-card draft-visual-${draftVisualVariant(selected.brand, selectedAlbumIndex + index)}` : undefined} style={slide.image ? { backgroundColor: selected.accent } : undefined}>
                     {slide.image ? <Image src={slide.image} alt="" fill sizes="80px" /> : <p>{slide.copy}</p>}
                   </div>
                 </button>

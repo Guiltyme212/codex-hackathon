@@ -4647,6 +4647,7 @@ select:focus-visible {
   z-index: 0;
   inset: 0;
   overflow: hidden;
+  opacity: .4;
   pointer-events: none;
 }
 
