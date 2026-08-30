@@ -47,18 +47,18 @@ export default function Home() {
         <div className="hero-visual" aria-label="Content Factory campaign preview">
           <div className="visual-label">OUTPUT / CAROUSEL 02</div>
           <div className="poster poster-back">
-            <Image src="/demo/content-factory-03.jpg" alt="Content Factory carousel slide: Automated campaigns. Compounding attention." fill loading="eager" sizes="(max-width: 800px) 55vw, 25vw" />
+            <Image src="/demo/content-factory-03.jpg" alt="Content Factory carousel slide: You keep building. We keep you visible." fill loading="eager" sizes="(max-width: 800px) 55vw, 25vw" />
           </div>
           <div className="poster poster-middle">
-            <Image src="/demo/content-factory-02.jpg" alt="Content Factory carousel slide: We make your app impossible to ignore." fill loading="eager" sizes="(max-width: 800px) 55vw, 25vw" />
+            <Image src="/demo/content-factory-02.jpg" alt="Content Factory carousel slide: Content Factory creates campaigns just from your website link." fill loading="eager" sizes="(max-width: 800px) 55vw, 25vw" />
           </div>
           <div className="poster poster-front">
-            <Image src="/demo/content-factory-01.jpg" alt="Content Factory carousel slide: Your app isn’t invisible. Your positioning is." fill priority sizes="(max-width: 800px) 55vw, 25vw" />
+            <Image src="/demo/content-factory-01.jpg" alt="Content Factory carousel slide: Your vibe-coded app still has zero traction?" fill priority sizes="(max-width: 800px) 55vw, 25vw" />
           </div>
           <div className="angle-note">
             <Sparkles size={16} aria-hidden="true" />
             <span>Angle found</span>
-            <strong>built it. now grow it.</strong>
+            <strong>one link. full campaign.</strong>
           </div>
         </div>
       </section>
@@ -108,7 +108,7 @@ export default function Home() {
             </div>
             <div className="campaign-card warm">
               <div><span>VALIDATION</span><b>7 slides</b></div>
-              <h3>your app isn&apos;t invisible. your positioning is.</h3>
+              <h3>your vibe-coded app still has zero traction?</h3>
               <div className="mini-slides">
                 {[1, 2, 3].map((index) => <Image key={index} src={`/demo/content-factory-0${index}.jpg`} alt="" width={90} height={135} />)}
               </div>
@@ -116,14 +116,14 @@ export default function Home() {
             </div>
             <div className="campaign-card blue">
               <div><span>EDUCATIONAL</span><b>Script</b></div>
-              <h3>we make your app impossible to ignore.</h3>
+              <h3>Content Factory creates campaigns just from your website link.</h3>
               <p>Hook variations <strong>08</strong></p>
               <p>Voice match <strong>94%</strong></p>
               <footer><span>Draft generated</span><ArrowRight size={17} aria-hidden="true" /></footer>
             </div>
             <div className="campaign-card acid">
               <div><span>LEARNING</span><b>Live</b></div>
-              <h3>Automated campaigns. Compounding attention.</h3>
+              <h3>You keep building. We keep you visible.</h3>
               <div className="signal-bars"><i /><i /><i /><i /><i /></div>
               <footer><span>Apply insight</span><ArrowRight size={17} aria-hidden="true" /></footer>
             </div>
