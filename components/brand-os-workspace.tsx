@@ -7,17 +7,18 @@ import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
+  ArrowUpRight,
   Check,
   ChevronRight,
-  Clapperboard,
-  Copy,
-  GalleryHorizontalEnd,
-  Images,
   Layers3,
+  Megaphone,
+  MessageCircleMore,
   MousePointer2,
+  PanelsTopLeft,
   RotateCcw,
   ScanSearch,
   Sparkles,
+  Video,
   WandSparkles,
   X,
 } from "lucide-react";
@@ -45,10 +46,10 @@ type SwipeIdea = {
 const ideaTints = ["#f5a38f", "#ecc34a", "#a4a46c", "#8b8fff", "#74c6bd"];
 
 const formats = [
-  { id: "carousel", name: "Carousels", detail: "7-slide stories", icon: GalleryHorizontalEnd },
-  { id: "ugc", name: "UGC videos", detail: "Hooks + scripts", icon: Clapperboard },
-  { id: "ads", name: "Paid creative", detail: "Concepts + variants", icon: Images },
-  { id: "threads", name: "Founder posts", detail: "Threads + POVs", icon: Copy },
+  { id: "carousel", index: "01", name: "Carousels", detail: "Turn one hook into a seven-slide story people want to finish.", payoff: "HOOK → STORY → SOFT CTA", icon: PanelsTopLeft },
+  { id: "ugc", index: "02", name: "UGC videos", detail: "Creator-ready scripts with a thumb-stop, beats, and shot prompts.", payoff: "HOOK → SCRIPT → SHOT LIST", icon: Video },
+  { id: "ads", index: "03", name: "Paid creative", detail: "Build an angle into testable concepts and message variants.", payoff: "ANGLE → VARIANTS → TEST", icon: Megaphone },
+  { id: "threads", index: "04", name: "Founder posts", detail: "Shape product insight into a credible founder point of view.", payoff: "INSIGHT → POV → POST", icon: MessageCircleMore },
 ];
 
 function createIdeas(profile: BrandProfile): SwipeIdea[] {
@@ -175,21 +176,24 @@ export function BrandOsWorkspace() {
 
     setBusy(true);
     const direction = decision === "keep" ? 1 : -1;
-    animationRef.current = card.animate(
+    const exitAnimation = card.animate(
       [
         { transform: card.style.transform || "translate3d(0, 0, 0) rotate(0deg)", opacity: 1 },
         { transform: `translate3d(${direction * 680}px, -18px, 0) rotate(${direction * 14}deg)`, opacity: 0 },
       ],
       { duration: 230, easing: "cubic-bezier(.23, 1, .32, 1)", fill: "forwards" },
     );
-    animationRef.current.finished
-      .then(() => finishDecision(decision, idea))
+    animationRef.current = exitAnimation;
+    exitAnimation.finished
+      .then(() => {
+        exitAnimation.cancel();
+        if (animationRef.current === exitAnimation) animationRef.current = null;
+        resetCardStyles();
+        finishDecision(decision, idea);
+      })
       .catch(() => {
         setBusy(false);
         resetCardStyles();
-      })
-      .finally(() => {
-        animationRef.current = null;
       });
   }
 
@@ -336,7 +340,14 @@ export function BrandOsWorkspace() {
           <div className="hook-heading">
             <span className="studio-eyebrow"><Sparkles size={13} aria-hidden="true" /> Generated from the brand, not a blank prompt</span>
             <h2 id="hook-title">Choose the hooks<br /><em>worth making.</em></h2>
-            <p>Swipe right to save. Swipe left to pass. Every decision becomes part of the campaign brief.</p>
+            <aside className="hook-why-card">
+              <span><strong>1.5s</strong><small>TO EARN ATTENTION</small></span>
+              <div>
+                <strong>Hooks decide if the rest gets seen.</strong>
+                <p>People choose whether to keep watching before they understand your app. Pick the promise that earns the next second; we build the campaign around it.</p>
+                <small>SWIPE RIGHT TO SAVE · LEFT TO PASS</small>
+              </div>
+            </aside>
           </div>
 
           <div className="hook-workbench">
@@ -416,18 +427,23 @@ export function BrandOsWorkspace() {
           <div>
             <span className="studio-eyebrow">YOUR BRAND BRAIN IS READY</span>
             <h2 id="format-title">What should we make first?</h2>
-            <p>Start with carousels today. The same identity and hook decisions already adapt to every format.</p>
+            <p>One Brand Studio, four ways to earn attention. Choose a format and the brief keeps the identity and hooks you already approved.</p>
           </div>
           <div className="format-grid">
             {formats.map((format) => {
               const Icon = format.icon;
               const active = selectedFormat === format.id;
               return (
-                <button key={format.id} type="button" className={active ? "is-selected" : ""} onClick={() => chooseFormat(format.id)}>
-                  <Icon size={20} aria-hidden="true" />
-                  <span><strong>{format.name}</strong><small>{format.detail}</small></span>
-                  <b>{format.id === "carousel" ? (kept.length ? "BUILD" : "KEEP A HOOK") : "READY"}</b>
-                  <ChevronRight size={16} aria-hidden="true" />
+                <button key={format.id} type="button" className={`format-card format-${format.id}${active ? " is-selected" : ""}`} onClick={() => chooseFormat(format.id)}>
+                  <div className="format-card-head">
+                    <span>{format.index} / 04</span>
+                    <b>{format.id === "carousel" ? (kept.length ? "BUILD NOW" : "KEEP A HOOK") : "BRIEF READY"}</b>
+                  </div>
+                  <div className="format-card-main">
+                    <span className="format-card-icon"><Icon size={22} strokeWidth={1.8} aria-hidden="true" /></span>
+                    <div><strong>{format.name}</strong><p>{format.detail}</p></div>
+                  </div>
+                  <div className="format-card-foot"><span>{format.payoff}</span><ArrowUpRight size={16} aria-hidden="true" /></div>
                 </button>
               );
             })}
