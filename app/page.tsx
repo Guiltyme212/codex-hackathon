@@ -24,21 +24,21 @@ export default function Home() {
           <Link href="#demo">Live demo</Link>
         </nav>
         <Link className="header-cta" href="#demo">
-          Open the factory <ArrowDownRight aria-hidden="true" size={18} />
+          Market your app <ArrowDownRight aria-hidden="true" size={18} />
         </Link>
       </header>
 
       <section className="hero" id="top">
         <div className="hero-copy">
           <div className="hero-kicker">
-            <span className="status-dot" /> The growth system for app founders
+            <span className="status-dot" /> The marketing workspace for app founders
           </div>
           <h1>
             Building the app got easy.<br />
             <span className="hero-contrast">Getting it seen didn&apos;t.</span>
           </h1>
           <p className="hero-lede">
-            Content Factory learns your product, finds the angles people care about, and turns them
+            Paste your website. Content Factory learns your app, finds the angles people care about, and turns them
             into campaigns you can approve as quickly as you built the app.
           </p>
           <DiscoveryDemo />
@@ -47,10 +47,10 @@ export default function Home() {
         <div className="hero-visual" aria-label="Content Factory campaign preview">
           <div className="visual-label">OUTPUT / CAROUSEL 02</div>
           <div className="poster poster-back">
-            <Image src="/demo/content-factory-03.jpg" alt="Content Factory carousel slide: Stop prompting. Start shipping." fill loading="eager" sizes="(max-width: 800px) 55vw, 25vw" />
+            <Image src="/demo/content-factory-03.jpg" alt="Content Factory carousel slide: Automated campaigns. Compounding attention." fill loading="eager" sizes="(max-width: 800px) 55vw, 25vw" />
           </div>
           <div className="poster poster-middle">
-            <Image src="/demo/content-factory-02.jpg" alt="Content Factory carousel slide: One website in. A campaign system out." fill loading="eager" sizes="(max-width: 800px) 55vw, 25vw" />
+            <Image src="/demo/content-factory-02.jpg" alt="Content Factory carousel slide: We make your app impossible to ignore." fill loading="eager" sizes="(max-width: 800px) 55vw, 25vw" />
           </div>
           <div className="poster poster-front">
             <Image src="/demo/content-factory-01.jpg" alt="Content Factory carousel slide: Your app isn’t invisible. Your positioning is." fill priority sizes="(max-width: 800px) 55vw, 25vw" />
@@ -58,7 +58,7 @@ export default function Home() {
           <div className="angle-note">
             <Sparkles size={16} aria-hidden="true" />
             <span>Angle found</span>
-            <strong>distribution without guesswork</strong>
+            <strong>built it. now grow it.</strong>
           </div>
         </div>
       </section>
@@ -116,14 +116,14 @@ export default function Home() {
             </div>
             <div className="campaign-card blue">
               <div><span>EDUCATIONAL</span><b>Script</b></div>
-              <h3>one website in. a campaign system out.</h3>
+              <h3>we make your app impossible to ignore.</h3>
               <p>Hook variations <strong>08</strong></p>
               <p>Voice match <strong>94%</strong></p>
               <footer><span>Draft generated</span><ArrowRight size={17} aria-hidden="true" /></footer>
             </div>
             <div className="campaign-card acid">
               <div><span>LEARNING</span><b>Live</b></div>
-              <h3>Stop prompting. Start shipping.</h3>
+              <h3>Automated campaigns. Compounding attention.</h3>
               <div className="signal-bars"><i /><i /><i /><i /><i /></div>
               <footer><span>Apply insight</span><ArrowRight size={17} aria-hidden="true" /></footer>
             </div>

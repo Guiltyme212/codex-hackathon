@@ -41,6 +41,7 @@ function buildProfile(input: {
   name: string;
   url: string;
   description: string;
+  logo?: string;
   image?: string;
   themeColor?: string;
   headings?: string[];
@@ -56,13 +57,16 @@ function buildProfile(input: {
     `Reach the outcome without the usual complexity`,
     `Get value from the first session`,
   ]).slice(0, 3);
+  const accent = /^#[0-9a-f]{6}$/i.test(input.themeColor ?? "") ? input.themeColor! : "#c8ff5c";
 
   return {
     name: input.name,
     url: input.url,
     description: input.description,
+    logo: input.logo,
     image: input.image,
     themeColor: input.themeColor,
+    palette: ["#f5f1e8", "#151612", accent, "#ffffff"],
     signals: unique([
       input.keywords?.[0] ?? "Website positioning",
       input.keywords?.[1] ?? "Audience language",
@@ -190,7 +194,13 @@ export async function POST(request: Request) {
     const title = $('meta[property="og:site_name"]').attr("content") || $('meta[property="og:title"]').attr("content") || $("title").text() || finalUrl.hostname;
     const name = clean(title).split(/\s[|—–]\s/)[0].trim().slice(0, 80);
     const description = clean($('meta[property="og:description"]').attr("content") || $('meta[name="description"]').attr("content") || $("h1").first().text() || "We found the website. Add a short product description before generating content.").slice(0, 400);
-    const image = absoluteAsset($('meta[property="og:image"]').attr("content") || $('link[rel~="icon"]').attr("href"), finalUrl);
+    const logo = absoluteAsset(
+      $('link[rel="apple-touch-icon"]').last().attr("href") ||
+      $('link[rel~="icon"]').last().attr("href") ||
+      "/favicon.ico",
+      finalUrl,
+    );
+    const image = absoluteAsset($('meta[property="og:image"]').attr("content"), finalUrl);
     const themeColor = $('meta[name="theme-color"]').attr("content");
     const keywords = ($('meta[name="keywords"]').attr("content") || "").split(",").map((item) => item.trim()).filter(Boolean);
     const headings = unique($("h1, h2").map((_, element) => $(element).text()).get()).slice(0, 8);
@@ -198,6 +208,7 @@ export async function POST(request: Request) {
       name,
       url: finalUrl.toString(),
       description,
+      logo,
       image,
       themeColor,
       headings,

@@ -1,22 +1,27 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
-  ArrowDownRight,
   ArrowLeft,
   ArrowRight,
   Check,
-  CircleDot,
-  FilePenLine,
+  ChevronRight,
+  Clapperboard,
+  Copy,
+  GalleryHorizontalEnd,
+  Images,
   Layers3,
   MousePointer2,
   RotateCcw,
+  ScanSearch,
   Sparkles,
+  WandSparkles,
   X,
-  Zap,
 } from "lucide-react";
 import {
-  FormEvent,
   KeyboardEvent,
   PointerEvent as ReactPointerEvent,
   useEffect,
@@ -24,101 +29,51 @@ import {
   useRef,
   useState,
 } from "react";
-import { contentFactoryProfile, type BrandProfile } from "@/lib/brand-profile";
+import { buildCarouselDraft, type ContentAlbum } from "@/lib/albums";
+import { kokoroProfile, type BrandProfile } from "@/lib/brand-profile";
 
 type Decision = "keep" | "pass";
-type LabMode = "blitz" | "manual";
 
 type SwipeIdea = {
   id: string;
-  angle: string;
   hook: string;
-  format: string;
-  channel: string;
+  angle: string;
   why: string;
   tint: string;
 };
 
-const demoHooks = [
-  "your app isn’t invisible—your positioning is",
-  "building the app got easy; getting it seen didn’t",
-  "one website in, a campaign system out",
-  "stop prompting; start shipping",
-  "distribution is a product problem too",
+const ideaTints = ["#f5a38f", "#ecc34a", "#a4a46c", "#8b8fff", "#74c6bd"];
+
+const formats = [
+  { id: "carousel", name: "Carousels", detail: "7-slide stories", icon: GalleryHorizontalEnd },
+  { id: "ugc", name: "UGC videos", detail: "Hooks + scripts", icon: Clapperboard },
+  { id: "ads", name: "Paid creative", detail: "Concepts + variants", icon: Images },
+  { id: "threads", name: "Founder posts", detail: "Threads + POVs", icon: Copy },
 ];
 
-const ideaFormats = ["7-slide story", "Hook + demo", "Founder POV", "Wall of text", "Voiceover reel"];
-const ideaChannels = ["Instagram", "TikTok", "LinkedIn", "TikTok", "Reels"];
-const ideaTints = ["#f29c8f", "#c8ff5c", "#8b8fff", "#ffd36c", "#9ad8c6"];
-
 function createIdeas(profile: BrandProfile): SwipeIdea[] {
-  return profile.contentAngles.slice(0, 5).map((angle, index) => ({
+  return profile.contentAngles.slice(0, 5).map((hook, index) => ({
     id: `${profile.name}-${index}`,
-    angle,
-    hook: profile.name === "Content Factory" ? demoHooks[index] : angle.toLowerCase(),
-    format: ideaFormats[index],
-    channel: ideaChannels[index],
-    why: index === 0 ? `Leads with the audience’s felt problem before introducing ${profile.name}.` : `Turns a discovered brand signal into a native, testable story.`,
+    hook,
+    angle: index === 0 ? "Identity mirror" : index === 1 ? "Permission gap" : index === 2 ? "Product moment" : index === 3 ? "Category contrast" : "Emotional payoff",
+    why: index === 0
+      ? `Makes ${profile.audience[0]?.toLowerCase() ?? "the audience"} feel seen before introducing the product.`
+      : `Turns a discovered ${profile.name} signal into a native, testable opening.`,
     tint: ideaTints[index],
   }));
 }
 
-function EditableTextCard({
-  label,
-  value,
-  onSave,
-}: {
-  label: string;
-  value: string;
-  onSave: (value: string) => void;
-}) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(value);
-
-  function save() {
-    const nextValue = draft.trim();
-    if (nextValue) onSave(nextValue);
-    setEditing(false);
-  }
-
-  return (
-    <article className="dna-card editable-dna-card">
-      <div className="dna-card-heading">
-        <span>{label}</span>
-        <button type="button" onClick={() => {
-          if (editing) save();
-          else {
-            setDraft(value);
-            setEditing(true);
-          }
-        }} aria-expanded={editing}>
-          {editing ? <><Check size={13} aria-hidden="true" /> Save</> : <><FilePenLine size={13} aria-hidden="true" /> Edit</>}
-        </button>
-      </div>
-      {editing ? (
-        <textarea value={draft} onChange={(event) => setDraft(event.target.value)} aria-label={`Edit ${label}`} autoFocus />
-      ) : (
-        <p>{value}</p>
-      )}
-    </article>
-  );
-}
-
 export function BrandOsWorkspace() {
-  const [profile, setProfile] = useState<BrandProfile>(contentFactoryProfile);
-  const [hydrated, setHydrated] = useState(false);
-  const [mode, setMode] = useState<LabMode>("blitz");
+  const router = useRouter();
+  const [profile, setProfile] = useState<BrandProfile>(kokoroProfile);
+  const [visibleIdeas, setVisibleIdeas] = useState(0);
   const [ideaIndex, setIdeaIndex] = useState(0);
   const [kept, setKept] = useState<SwipeIdea[]>([]);
   const [passed, setPassed] = useState(0);
   const [busy, setBusy] = useState(false);
-  const [announcement, setAnnouncement] = useState("Swipe right to keep an idea, left to pass.");
-  const [manualGoal, setManualGoal] = useState("Build awareness");
-  const [manualFormat, setManualFormat] = useState("Founder story");
-  const [manualNote, setManualNote] = useState("");
-  const [manualDraftReady, setManualDraftReady] = useState(false);
-  const [manualDraft, setManualDraft] = useState("");
-  const [campaignBuilt, setCampaignBuilt] = useState(false);
+  const [announcement, setAnnouncement] = useState("Hooks are being generated.");
+  const [logoFailed, setLogoFailed] = useState(false);
+  const [selectedFormat, setSelectedFormat] = useState("carousel");
   const cardRef = useRef<HTMLDivElement>(null);
   const resetDeckRef = useRef<HTMLButtonElement>(null);
   const keepOverlayRef = useRef<HTMLDivElement>(null);
@@ -129,28 +84,57 @@ export function BrandOsWorkspace() {
   useEffect(() => {
     const loadProfile = window.setTimeout(() => {
       const stored = window.sessionStorage.getItem("content-factory-profile");
-      if (stored) {
-        try {
-          setProfile(JSON.parse(stored) as BrandProfile);
-        } catch {
-          window.sessionStorage.removeItem("content-factory-profile");
-        }
+      if (!stored) return;
+      try {
+        setProfile(JSON.parse(stored) as BrandProfile);
+      } catch {
+        window.sessionStorage.removeItem("content-factory-profile");
       }
-      setHydrated(true);
     }, 0);
     return () => window.clearTimeout(loadProfile);
   }, []);
 
-  useEffect(() => {
-    if (hydrated) window.sessionStorage.setItem("content-factory-profile", JSON.stringify(profile));
-  }, [hydrated, profile]);
-
   const ideas = useMemo(() => createIdeas(profile), [profile]);
-  const activeIdea = ideas[ideaIndex];
+  const activeIdea = ideaIndex < visibleIdeas ? ideas[ideaIndex] : undefined;
+  const palette = profile.palette?.length ? profile.palette : ["#f5f1e8", "#151612", profile.themeColor || "#c8ff5c", "#ffffff"];
 
-  function updateProfile(field: "positioning" | "problem" | "mission", value: string) {
-    setProfile((current) => ({ ...current, [field]: value }));
-  }
+  useEffect(() => {
+    let generationTimer: number | undefined;
+    let count = 0;
+    const startGeneration = window.setTimeout(() => {
+      setVisibleIdeas(0);
+      setIdeaIndex(0);
+      setKept([]);
+      setPassed(0);
+      setLogoFailed(false);
+
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        setVisibleIdeas(ideas.length);
+        setAnnouncement(`${ideas.length} hooks generated.`);
+        return;
+      }
+
+      generationTimer = window.setInterval(() => {
+        count += 1;
+        setVisibleIdeas(count);
+        setAnnouncement(count === ideas.length ? `${ideas.length} hooks generated.` : `Hook ${count} generated.`);
+        if (count >= ideas.length && generationTimer) window.clearInterval(generationTimer);
+      }, 360);
+    }, 0);
+
+    return () => {
+      window.clearTimeout(startGeneration);
+      if (generationTimer) window.clearInterval(generationTimer);
+    };
+  }, [ideas]);
+
+  useEffect(() => {
+    if (!kept.length && !passed) return;
+    window.localStorage.setItem(
+      "content-factory-swipe-v1",
+      JSON.stringify({ brand: profile.name, kept: kept.map((idea) => idea.hook), passed }),
+    );
+  }, [kept, passed, profile.name]);
 
   function resetCardStyles() {
     if (cardRef.current) {
@@ -171,7 +155,6 @@ export function BrandOsWorkspace() {
       setAnnouncement(`Passed “${idea.hook}”.`);
     }
     setIdeaIndex((current) => current + 1);
-    setCampaignBuilt(false);
     setBusy(false);
     window.requestAnimationFrame(() => {
       resetCardStyles();
@@ -192,14 +175,13 @@ export function BrandOsWorkspace() {
 
     setBusy(true);
     const direction = decision === "keep" ? 1 : -1;
-    const startingTransform = card.style.transform || "translate3d(0, 0, 0) rotate(0deg)";
     animationRef.current = card.animate(
-        [
-          { transform: startingTransform, opacity: 1 },
-          { transform: `translate3d(${direction * 620}px, -14px, 0) rotate(${direction * 16}deg)`, opacity: 0 },
-        ],
-        { duration: 220, easing: "cubic-bezier(.23, 1, .32, 1)", fill: "forwards" },
-      );
+      [
+        { transform: card.style.transform || "translate3d(0, 0, 0) rotate(0deg)", opacity: 1 },
+        { transform: `translate3d(${direction * 680}px, -18px, 0) rotate(${direction * 14}deg)`, opacity: 0 },
+      ],
+      { duration: 230, easing: "cubic-bezier(.23, 1, .32, 1)", fill: "forwards" },
+    );
     animationRef.current.finished
       .then(() => finishDecision(decision, idea))
       .catch(() => {
@@ -212,19 +194,18 @@ export function BrandOsWorkspace() {
   }
 
   function handlePointerDown(event: ReactPointerEvent<HTMLDivElement>) {
-    if (busy) return;
+    if (busy || drag.current.active) return;
     drag.current = { active: true, pointerId: event.pointerId, startX: event.clientX, startAt: performance.now(), x: 0 };
     event.currentTarget.setPointerCapture(event.pointerId);
-    event.currentTarget.style.transition = "none";
   }
 
   function handlePointerMove(event: ReactPointerEvent<HTMLDivElement>) {
     if (!drag.current.active || drag.current.pointerId !== event.pointerId || !cardRef.current) return;
-    const x = event.clientX - drag.current.startX;
+    const x = (event.clientX - drag.current.startX) * 0.86;
     drag.current.x = x;
-    cardRef.current.style.transform = `translate3d(${x}px, 0, 0) rotate(${x / 24}deg)`;
-    if (keepOverlayRef.current) keepOverlayRef.current.style.opacity = String(Math.min(Math.max(x / 90, 0), 1));
-    if (passOverlayRef.current) passOverlayRef.current.style.opacity = String(Math.min(Math.max(-x / 90, 0), 1));
+    cardRef.current.style.transform = `translate3d(${x}px, 0, 0) rotate(${x / 25}deg)`;
+    if (keepOverlayRef.current) keepOverlayRef.current.style.opacity = String(Math.min(Math.max(x / 88, 0), 1));
+    if (passOverlayRef.current) passOverlayRef.current.style.opacity = String(Math.min(Math.max(-x / 88, 0), 1));
   }
 
   function handlePointerUp(event: ReactPointerEvent<HTMLDivElement>) {
@@ -233,24 +214,18 @@ export function BrandOsWorkspace() {
     const velocity = Math.abs(drag.current.x) / elapsed;
     const x = drag.current.x;
     drag.current.active = false;
-    event.currentTarget.releasePointerCapture(event.pointerId);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
 
-    if (Math.abs(x) > 92 || velocity > 0.55) {
+    if (Math.abs(x) > 88 || velocity > 0.48) {
       decide(x > 0 ? "keep" : "pass");
       return;
     }
 
-    const startingTransform = cardRef.current.style.transform;
     animationRef.current = cardRef.current.animate(
-        [{ transform: startingTransform }, { transform: "translate3d(0, 0, 0) rotate(0deg)" }],
-        { duration: 190, easing: "cubic-bezier(.23, 1, .32, 1)" },
-      );
-    animationRef.current.finished
-      .then(resetCardStyles)
-      .catch(resetCardStyles)
-      .finally(() => {
-        animationRef.current = null;
-      });
+      [{ transform: cardRef.current.style.transform }, { transform: "translate3d(0, 0, 0) rotate(0deg)" }],
+      { duration: 190, easing: "cubic-bezier(.23, 1, .32, 1)" },
+    );
+    animationRef.current.finished.then(resetCardStyles).catch(resetCardStyles);
   }
 
   function handlePointerCancel() {
@@ -262,8 +237,7 @@ export function BrandOsWorkspace() {
     if (event.key === "ArrowLeft") {
       event.preventDefault();
       decide("pass", false);
-    }
-    if (event.key === "ArrowRight") {
+    } else if (event.key === "ArrowRight") {
       event.preventDefault();
       decide("keep", false);
     }
@@ -275,217 +249,192 @@ export function BrandOsWorkspace() {
     setIdeaIndex(0);
     setKept([]);
     setPassed(0);
-    setCampaignBuilt(false);
-    setAnnouncement("Deck reset. Swipe right to keep an idea, left to pass.");
+    setAnnouncement("Deck reset. Swipe right to keep a hook, left to pass.");
+    window.localStorage.removeItem("content-factory-swipe-v1");
+    window.requestAnimationFrame(() => cardRef.current?.focus());
   }
 
-  function selectLabMode(nextMode: LabMode) {
-    animationRef.current?.cancel();
-    animationRef.current = null;
-    drag.current.active = false;
-    setBusy(false);
-    resetCardStyles();
-    setMode(nextMode);
+  function createCarousel() {
+    const chosen = kept[0];
+    if (!chosen) return;
+    const draft = buildCarouselDraft(profile, chosen.hook);
+    const stored = window.localStorage.getItem("content-factory-draft-albums");
+    let drafts: ContentAlbum[] = [];
+    try {
+      drafts = stored ? JSON.parse(stored) as ContentAlbum[] : [];
+    } catch {
+      drafts = [];
+    }
+    window.localStorage.setItem("content-factory-draft-albums", JSON.stringify([draft, ...drafts].slice(0, 8)));
+    router.push("/albums?draft=1");
   }
 
-  function handleLabTabKeyDown(event: KeyboardEvent<HTMLButtonElement>, currentMode: LabMode) {
-    const modes: LabMode[] = ["blitz", "manual"];
-    const currentIndex = modes.indexOf(currentMode);
-    let nextIndex = currentIndex;
-
-    if (event.key === "ArrowRight") nextIndex = (currentIndex + 1) % modes.length;
-    else if (event.key === "ArrowLeft") nextIndex = (currentIndex - 1 + modes.length) % modes.length;
-    else if (event.key === "Home") nextIndex = 0;
-    else if (event.key === "End") nextIndex = modes.length - 1;
-    else return;
-
-    event.preventDefault();
-    selectLabMode(modes[nextIndex]);
-    window.requestAnimationFrame(() => document.getElementById(`lab-tab-${modes[nextIndex]}`)?.focus());
-  }
-
-  function buildManualDraft(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const direction = manualNote.trim() || profile.contentAngles[0];
-    setManualDraft(`${direction} ${profile.name} turns that insight into a clear next step: ${profile.positioning}`);
-    setManualDraftReady(true);
-  }
-
-  function buildCampaign() {
-    if (!kept.length) return;
-    setCampaignBuilt(true);
-    setAnnouncement(`${kept.length} approved ideas assembled into a launch campaign.`);
+  function chooseFormat(formatId: string) {
+    setSelectedFormat(formatId);
+    if (formatId === "carousel" && kept.length) createCarousel();
   }
 
   return (
-    <div className="brand-os-page">
-      <a className="skip-link" href="#brand-os-main">Skip to Brand OS</a>
-      <header className="workspace-header">
-        <Link className="workspace-wordmark" href="/" aria-label="Content Factory home">
-          content factory<span>®</span>
-        </Link>
-        <div className="workspace-breadcrumb"><span>Workspace</span><i>/</i><strong>{profile.name}</strong></div>
-        <div className="workspace-header-status"><i /><span>Brand OS ready</span></div>
-        <Link className="workspace-exit" href="/"><ArrowLeft size={16} aria-hidden="true" /> New discovery</Link>
+    <div className="growth-studio">
+      <a className="skip-link" href="#studio-main">Skip to studio</a>
+      <header className="growth-header">
+        <Link className="growth-wordmark" href="/" aria-label="Content Factory home">content factory<span>®</span></Link>
+        <div className="growth-progress" aria-label="Workflow progress">
+          <span className="is-done"><Check size={11} /> Discover</span><i />
+          <span className="is-current">Brand studio</span><i />
+          <span>Create</span>
+        </div>
+        <nav aria-label="Studio navigation">
+          <Link href="/albums"><Layers3 size={15} aria-hidden="true" /> Albums</Link>
+          <Link href="/"><ArrowLeft size={15} aria-hidden="true" /> New app</Link>
+        </nav>
       </header>
 
-      <div className="workspace-shell">
-        <aside className="workspace-sidebar" aria-label="Workspace sections">
-          <div className="workspace-app-mark" style={{ backgroundColor: profile.themeColor || "#c8ff5c" }}>
-            {profile.name.slice(0, 1).toUpperCase()}
+      <main id="studio-main" className="growth-main">
+        <section className="identity-stage" aria-labelledby="identity-title">
+          <div className="identity-heading">
+            <span className="studio-eyebrow"><i /> Website understood</span>
+            <h1 id="identity-title">Your app already has a story.<br /><em>Now it has a marketing system.</em></h1>
+            <p>We pulled the identity, audience, promise, and language that should shape every piece of content.</p>
           </div>
-          <nav>
-            <a href="#overview" aria-current="page"><CircleDot size={16} aria-hidden="true" /><span>Overview</span><b>01</b></a>
-            <a href="#brand-dna"><Layers3 size={16} aria-hidden="true" /><span>Brand DNA</span><b>02</b></a>
-            <a href="#launch-lab"><Zap size={16} aria-hidden="true" /><span>Launch lab</span><b>03</b></a>
-          </nav>
-          <div className="workspace-sidebar-note">
-            <Sparkles size={15} aria-hidden="true" />
-            <p><strong>{profile.signals.length} signals</strong> mapped from {profile.url === "Founder brief" ? "your brief" : "the website"}.</p>
-          </div>
-        </aside>
 
-        <main id="brand-os-main" className="workspace-main">
-          <section className="brand-os-hero" id="overview">
-            <div className="brand-os-intro">
-              <span className="workspace-eyebrow">01 / DISCOVERED PRODUCT TRUTH</span>
-              <h1>We found what makes<br /><em>{profile.name}</em> worth noticing.</h1>
+          <div className="identity-board">
+            <article className="identity-brand-card">
+              <div className="brand-card-top">
+                <div className="brand-logo-shell" style={{ backgroundColor: palette[0] }}>
+                  {profile.logo && !logoFailed ? <img src={profile.logo} alt={`${profile.name} logo`} onError={() => setLogoFailed(true)} /> : <span>{profile.name.slice(0, 1)}</span>}
+                </div>
+                <div><small>BRAND FOUND</small><h2>{profile.name}</h2><a href={profile.url === "Founder brief" ? undefined : profile.url} target="_blank" rel="noreferrer">{profile.url.replace(/^https?:\/\//, "")}</a></div>
+                <span className="identity-score">94%<small>signal match</small></span>
+              </div>
               <p>{profile.description}</p>
-              <div className="evidence-strip" aria-label="Evidence found">
-                {profile.evidence.map((item) => <span key={item}><Check size={12} aria-hidden="true" /> {item}</span>)}
+              <div className="palette-strip" aria-label="Extracted brand palette">
+                {palette.slice(0, 5).map((color, index) => <span key={`${color}-${index}`} style={{ backgroundColor: color }}><i>{color}</i></span>)}
               </div>
-            </div>
-            <div className="signal-map" aria-label="Brand signal map">
-              <div className="signal-map-label"><span>Brand signal map</span><b>Live brief</b></div>
-              <div className="signal-orbit">
-                <i className="orbit orbit-one" /><i className="orbit orbit-two" />
-                <div className="signal-core" style={{ backgroundColor: profile.themeColor || "#c8ff5c" }}>{profile.name.slice(0, 1)}</div>
-                <span className="signal-node node-a">Audience</span>
-                <span className="signal-node node-b">Problem</span>
-                <span className="signal-node node-c">Voice</span>
-                <span className="signal-node node-d">Proof</span>
-              </div>
-              <footer><span>Source</span><strong>{profile.url.replace(/^https?:\/\//, "")}</strong></footer>
-            </div>
-          </section>
+            </article>
 
-          <section className="brand-dna-section" id="brand-dna">
-            <div className="workspace-section-title">
-              <div><span className="workspace-eyebrow">02 / BRAND OS</span><h2>Your editable source of truth.</h2></div>
-              <p>Every idea and campaign downstream uses this context—not a blank prompt.</p>
-            </div>
-            <div className="dna-grid">
-              <EditableTextCard label="Positioning" value={profile.positioning} onSave={(value) => updateProfile("positioning", value)} />
-              <EditableTextCard label="Problem solved" value={profile.problem} onSave={(value) => updateProfile("problem", value)} />
-              <EditableTextCard label="Mission" value={profile.mission} onSave={(value) => updateProfile("mission", value)} />
-              <article className="dna-card dna-list-card">
-                <div className="dna-card-heading"><span>Audience</span><b>{profile.audience.length} segments</b></div>
-                <ul>{profile.audience.map((item) => <li key={item}>{item}</li>)}</ul>
-              </article>
-              <article className="dna-card dna-list-card">
-                <div className="dna-card-heading"><span>Reasons to believe</span><b>{profile.benefits.length} proofs</b></div>
-                <ul>{profile.benefits.map((item) => <li key={item}>{item}</li>)}</ul>
-              </article>
-              <article className="dna-card voice-card">
-                <div className="dna-card-heading"><span>Voice guardrails</span><b>Applied globally</b></div>
-                <div><strong>Do</strong>{profile.tone.map((item) => <span key={item}>+ {item}</span>)}</div>
-                <div><strong>Avoid</strong>{profile.avoid.map((item) => <span key={item}>− {item}</span>)}</div>
-              </article>
-            </div>
-          </section>
+            <article className="identity-positioning">
+              <span>POSITIONING</span>
+              <blockquote>“{profile.positioning}”</blockquote>
+              <div>{profile.tone.slice(0, 3).map((tone) => <span key={tone}>+ {tone}</span>)}</div>
+            </article>
 
-          <section className="launch-lab" id="launch-lab">
-            <div className="workspace-section-title launch-title">
-              <div><span className="workspace-eyebrow">03 / LAUNCH LAB</span><h2>Choose the work worth making.</h2></div>
-              <div className="lab-mode-tabs" role="tablist" aria-label="Content creation mode">
-                <button id="lab-tab-blitz" type="button" role="tab" aria-selected={mode === "blitz"} aria-controls="lab-panel-blitz" tabIndex={mode === "blitz" ? 0 : -1} onKeyDown={(event) => handleLabTabKeyDown(event, "blitz")} onClick={() => selectLabMode("blitz")}><MousePointer2 size={15} aria-hidden="true" /> Blitz</button>
-                <button id="lab-tab-manual" type="button" role="tab" aria-selected={mode === "manual"} aria-controls="lab-panel-manual" tabIndex={mode === "manual" ? 0 : -1} onKeyDown={(event) => handleLabTabKeyDown(event, "manual")} onClick={() => selectLabMode("manual")}><FilePenLine size={15} aria-hidden="true" /> Manual</button>
-              </div>
-            </div>
+            <article className="identity-audience">
+              <span>WHO NEEDS THIS</span>
+              <h3>{profile.audience[0]}</h3>
+              <p>{profile.problem}</p>
+            </article>
 
-            {mode === "blitz" ? (
-              <div id="lab-panel-blitz" role="tabpanel" aria-labelledby="lab-tab-blitz" className="swipe-lab">
-                <div className="swipe-stage">
-                  <div className="swipe-stage-heading">
-                    <div><span>IDEA {Math.min(ideaIndex + 1, ideas.length)} / {ideas.length}</span><strong>Swipe the launch deck</strong></div>
-                    <p>Right to keep · Left to pass</p>
-                  </div>
-                  <div className="card-stack">
-                    {activeIdea ? (
-                      <>
-                        {ideas[ideaIndex + 1] ? <div className="swipe-card card-behind" aria-hidden="true" /> : null}
-                        <div
-                          ref={cardRef}
-                          className="swipe-card active-swipe-card"
-                          style={{ borderTopColor: activeIdea.tint }}
-                          onPointerDown={handlePointerDown}
-                          onPointerMove={handlePointerMove}
-                          onPointerUp={handlePointerUp}
-                          onPointerCancel={handlePointerCancel}
-                          onKeyDown={handleCardKeyDown}
-                          role="group"
-                          aria-label={`Content idea: ${activeIdea.hook}. Use left arrow to pass or right arrow to keep.`}
-                          tabIndex={0}
-                        >
-                          <div ref={keepOverlayRef} className="decision-overlay keep-overlay">KEEP</div>
-                          <div ref={passOverlayRef} className="decision-overlay pass-overlay">PASS</div>
-                          <div className="idea-meta"><span>{activeIdea.format}</span><span>{activeIdea.channel}</span></div>
-                          <span className="idea-angle">Angle / {activeIdea.angle}</span>
-                          <h3>{activeIdea.hook}</h3>
-                          <p>{activeIdea.why}</p>
-                          <footer><span>Brand-matched</span><b><i /> Ready to test</b></footer>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="deck-complete">
-                        <span><Check size={18} aria-hidden="true" /> Deck sorted</span>
-                        <h3>{kept.length} ideas made the cut.</h3>
-                        <p>Your approved ideas are ready to become a launch campaign.</p>
-                        <button ref={resetDeckRef} type="button" onClick={resetDeck}><RotateCcw size={15} aria-hidden="true" /> Run the deck again</button>
-                      </div>
-                    )}
-                  </div>
-                  {activeIdea ? (
-                    <div className="swipe-actions">
-                      <button type="button" className="pass-action" onClick={() => decide("pass")} disabled={busy}><X size={19} aria-hidden="true" /><span>Pass</span><kbd>←</kbd></button>
-                      <button type="button" className="keep-action" onClick={() => decide("keep")} disabled={busy}><Check size={19} aria-hidden="true" /><span>Keep idea</span><kbd>→</kbd></button>
+            <article className="identity-proof">
+              <span>LANGUAGE WORTH KEEPING</span>
+              <ul>{profile.evidence.slice(0, 3).map((item) => <li key={item}><Check size={13} aria-hidden="true" /> {item}</li>)}</ul>
+            </article>
+          </div>
+        </section>
+
+        <section className="hook-studio" aria-labelledby="hook-title">
+          <div className="hook-heading">
+            <span className="studio-eyebrow"><Sparkles size={13} aria-hidden="true" /> Generated from the brand, not a blank prompt</span>
+            <h2 id="hook-title">Choose the hooks<br /><em>worth making.</em></h2>
+            <p>Swipe right to save. Swipe left to pass. Every decision becomes part of the campaign brief.</p>
+          </div>
+
+          <div className="hook-workbench">
+            <aside className="generation-stream" aria-label="Generated hooks">
+              <div className="generation-head"><span><ScanSearch size={14} /> LIVE GENERATION</span><b>{String(visibleIdeas).padStart(2, "0")} / {String(ideas.length).padStart(2, "0")}</b></div>
+              <ol>
+                {ideas.map((idea, index) => (
+                  <li key={idea.id} className={index < visibleIdeas ? "is-visible" : ""}>
+                    <span>{String(index + 1).padStart(2, "0")}</span>
+                    <div><small>{idea.angle}</small><p>{index < visibleIdeas ? idea.hook : "Finding another angle…"}</p></div>
+                    {index < visibleIdeas ? <Check size={13} aria-hidden="true" /> : <span className="stream-loader" />}
+                  </li>
+                ))}
+              </ol>
+            </aside>
+
+            <div className="real-swipe-stage">
+              <div className="swipe-stage-meta"><span>{activeIdea ? `HOOK ${ideaIndex + 1} / ${ideas.length}` : "DECK COMPLETE"}</span><p><MousePointer2 size={13} /> drag or use arrow keys</p></div>
+              <div className="real-card-stack">
+                {activeIdea ? (
+                  <>
+                    {ideas[ideaIndex + 1] ? <div className="real-swipe-card card-ghost" aria-hidden="true" /> : null}
+                    <div
+                      ref={cardRef}
+                      className="real-swipe-card"
+                      style={{ borderTopColor: activeIdea.tint }}
+                      onPointerDown={handlePointerDown}
+                      onPointerMove={handlePointerMove}
+                      onPointerUp={handlePointerUp}
+                      onPointerCancel={handlePointerCancel}
+                      onKeyDown={handleCardKeyDown}
+                      role="group"
+                      tabIndex={0}
+                      aria-label={`Hook: ${activeIdea.hook}. Use left arrow to pass or right arrow to keep.`}
+                    >
+                      <div ref={keepOverlayRef} className="real-decision-overlay keep">KEEP</div>
+                      <div ref={passOverlayRef} className="real-decision-overlay pass">PASS</div>
+                      <div className="swipe-card-label"><span>{activeIdea.angle}</span><b>BRAND MATCH 9{ideaIndex + 3}%</b></div>
+                      <h3>{activeIdea.hook}</h3>
+                      <p>{activeIdea.why}</p>
+                      <footer><span><i /> ready to test</span><small>content angle {String(ideaIndex + 1).padStart(2, "0")}</small></footer>
                     </div>
-                  ) : null}
-                </div>
-
-                <aside className="approved-queue">
-                  <div className="queue-heading"><span>Approved queue</span><b>{kept.length.toString().padStart(2, "0")}</b></div>
-                  {kept.length ? (
-                    <ol>{kept.map((idea, index) => <li key={idea.id}><span>{String(index + 1).padStart(2, "0")}</span><div><strong>{idea.hook}</strong><small>{idea.format} · {idea.channel}</small></div></li>)}</ol>
-                  ) : (
-                    <div className="queue-empty"><ArrowDownRight size={24} aria-hidden="true" /><p>Ideas you keep land here, ready for campaign production.</p></div>
-                  )}
-                  <footer><span>{passed} passed</span><button type="button" disabled={!kept.length} onClick={buildCampaign}>{campaignBuilt ? <><Check size={15} aria-hidden="true" /> Campaign ready</> : <>Build campaign <ArrowRight size={15} aria-hidden="true" /></>}</button></footer>
-                </aside>
-                <p className="sr-only" aria-live="polite">{announcement}</p>
-              </div>
-            ) : (
-              <div id="lab-panel-manual" role="tabpanel" aria-labelledby="lab-tab-manual" className="manual-lab">
-                <form onSubmit={buildManualDraft}>
-                  <div className="manual-form-heading"><span>Manual creation</span><strong>Start with intent, not a blank prompt.</strong></div>
-                  <label>Goal<select value={manualGoal} onChange={(event) => { setManualGoal(event.target.value); setManualDraftReady(false); }}><option>Build awareness</option><option>Explain the product</option><option>Drive signups</option></select></label>
-                  <label>Format<select value={manualFormat} onChange={(event) => { setManualFormat(event.target.value); setManualDraftReady(false); }}><option>Founder story</option><option>Hook + demo</option><option>Carousel</option><option>Wall of text</option></select></label>
-                  <label className="manual-brief">What should this piece say?<textarea value={manualNote} onChange={(event) => { setManualNote(event.target.value); setManualDraftReady(false); }} placeholder={`Try: explain why ${profile.name} exists without sounding like an ad.`} /></label>
-                  <button type="submit"><Sparkles size={16} aria-hidden="true" /> Draft content</button>
-                </form>
-                <div className={`manual-preview ${manualDraftReady ? "is-ready" : ""}`}>
-                  <span>{manualDraftReady ? "Draft ready" : "Live preview"}</span>
-                  <div className="manual-preview-canvas">
-                    <small>{manualFormat} / {manualGoal}</small>
-                    <h3>{manualNote.trim() || profile.contentAngles[0]}</h3>
-                    <p>{manualDraftReady ? manualDraft : "Add a direction, then draft a brand-matched first version."}</p>
+                  </>
+                ) : visibleIdeas < ideas.length ? (
+                  <div className="deck-waiting"><WandSparkles size={24} /><strong>Writing the next hook…</strong></div>
+                ) : (
+                  <div className="real-deck-complete">
+                    <span><Check size={17} /> Selection saved</span>
+                    <h3>{kept.length} hooks made the cut.</h3>
+                    <p>Use one to build the first carousel, or run the deck again.</p>
+                    <button ref={resetDeckRef} type="button" onClick={resetDeck}><RotateCcw size={15} /> Run again</button>
                   </div>
-                </div>
+                )}
               </div>
-            )}
-          </section>
-        </main>
-      </div>
+              {activeIdea ? (
+                <div className="real-swipe-actions">
+                  <button type="button" onClick={() => decide("pass")} disabled={busy}><X size={18} /><span>Pass</span><kbd>←</kbd></button>
+                  <button type="button" onClick={() => decide("keep")} disabled={busy}><Check size={18} /><span>Keep hook</span><kbd>→</kbd></button>
+                </div>
+              ) : null}
+            </div>
+
+            <aside className="kept-hooks">
+              <div><span>YOUR SHORTLIST</span><b>{String(kept.length).padStart(2, "0")}</b></div>
+              {kept.length ? (
+                <ol>{kept.map((idea, index) => <li key={idea.id}><span>{index + 1}</span><p>{idea.hook}</p></li>)}</ol>
+              ) : (
+                <div className="kept-empty"><ArrowRight size={22} /><p>Hooks you keep land here and become your next campaign.</p></div>
+              )}
+              <footer><span>{passed} passed</span><button type="button" disabled={!kept.length} onClick={createCarousel}>Build carousel <ChevronRight size={15} /></button></footer>
+            </aside>
+          </div>
+          <p className="sr-only" aria-live="polite">{announcement}</p>
+        </section>
+
+        <section className="format-launcher" aria-labelledby="format-title">
+          <div>
+            <span className="studio-eyebrow">YOUR BRAND BRAIN IS READY</span>
+            <h2 id="format-title">What should we make first?</h2>
+            <p>Start with carousels today. The same identity and hook decisions already adapt to every format.</p>
+          </div>
+          <div className="format-grid">
+            {formats.map((format) => {
+              const Icon = format.icon;
+              const active = selectedFormat === format.id;
+              return (
+                <button key={format.id} type="button" className={active ? "is-selected" : ""} onClick={() => chooseFormat(format.id)}>
+                  <Icon size={20} aria-hidden="true" />
+                  <span><strong>{format.name}</strong><small>{format.detail}</small></span>
+                  <b>{format.id === "carousel" ? (kept.length ? "BUILD" : "KEEP A HOOK") : "READY"}</b>
+                  <ChevronRight size={16} aria-hidden="true" />
+                </button>
+              );
+            })}
+          </div>
+          {selectedFormat !== "carousel" ? <div className="format-ready-note"><Check size={15} /> {formats.find((item) => item.id === selectedFormat)?.name} brief prepared from {profile.name}’s Brand Studio.</div> : null}
+        </section>
+      </main>
     </div>
   );
 }
