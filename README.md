@@ -1,6 +1,16 @@
 # Content Factory — Brand Studio for app founders
 
-[Live demo](https://codex-hackathon-production.up.railway.app/) · [Brand Studio](https://codex-hackathon-production.up.railway.app/workspace) · [Albums](https://codex-hackathon-production.up.railway.app/albums)
+**One website → brand intelligence → hooks worth testing → campaigns ready to ship.**
+
+[Launch the live demo](https://codex-hackathon-production.up.railway.app/) · [Open Brand Studio](https://codex-hackathon-production.up.railway.app/workspace) · [Browse Albums](https://codex-hackathon-production.up.railway.app/albums)
+
+<p align="center">
+  <a href="https://codex-hackathon-production.up.railway.app/">
+    <img src="./public/demo/content-factory-walkthrough.gif" alt="Content Factory walkthrough: discover Kokoro, inspect its Brand Studio, choose a content hook, and create a carousel Album" width="100%" />
+  </a>
+</p>
+
+<p align="center"><strong>Click the walkthrough to try it live—no signup required.</strong></p>
 
 Building an app is easier than ever. Getting people to notice it is still hard.
 
