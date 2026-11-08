@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { ArrowDown, ArrowDownLeft, ArrowRight, ArrowUpRight, Box, Check, CircleHelp, Layers3, LoaderCircle, MoveUpRight, Pause, Play, Plus, Printer, Rotate3d, Sparkles, VolumeX, X } from "lucide-react";
+import { ArrowDown, ArrowDownLeft, ArrowRight, ArrowUpRight, Box, Check, CircleHelp, Layers3, LoaderCircle, MoveUpRight, Pause, Play, Printer, Rotate3d, Sparkles, VolumeX, X } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import styles from "@/app/make/make.module.css";
 
@@ -67,11 +67,8 @@ export function ThingStudio() {
   const [generated, setGenerated] = useState(false);
   const [showPrint, setShowPrint] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
-  const [logo, setLogo] = useState<string | null>(null);
-  const [logoName, setLogoName] = useState("");
   const promptRef = useRef<HTMLTextAreaElement>(null);
   const previewRef = useRef<HTMLElement>(null);
-  const uploadRef = useRef<HTMLInputElement>(null);
   const modalRef = useRef<HTMLElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -140,8 +137,7 @@ export function ThingStudio() {
             <form className={`${styles.composer} ${generating ? styles.composerBusy : ""}`} onSubmit={makePreview}>
               <label htmlFor="thing-prompt" className={styles.srOnly}>Describe what you would love to make</label>
               <textarea ref={promptRef} id="thing-prompt" value={prompt} onChange={(event) => { setPrompt(event.target.value); setGenerated(false); }} placeholder="A slinky with my logo. A home for my headphones. Something nobody's made yet..." maxLength={700} rows={3} />
-              <div className={styles.composerToolbar}><button className={styles.attachButton} type="button" onClick={() => uploadRef.current?.click()}><Plus size={17} /><span>{logoName || "Add your logo"}</span></button><button className={styles.makeButton} type="submit" disabled={generating}>{generating ? <><LoaderCircle size={16} className={styles.spin} /> Shaping your idea</> : <>Make it real <ArrowUpRight size={18} /></>}</button></div>
-              <input ref={uploadRef} type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" aria-label="Upload your logo" hidden onChange={(event) => { const file = event.target.files?.[0]; if (!file || file.size > 5 * 1024 * 1024) return; const reader = new FileReader(); reader.onload = () => { setLogo(String(reader.result)); setLogoName(file.name); }; reader.readAsDataURL(file); }} />
+              <div className={styles.composerToolbar}><button className={styles.makeButton} type="submit" disabled={generating}>{generating ? <><LoaderCircle size={18} className={styles.spin} /> Shaping your idea</> : <>Make it real <ArrowUpRight className={styles.makeArrow} size={27} /></>}</button></div>
             </form>
             <div className={styles.templates}><span>OR START WITH</span><div>{templates.map((item) => <button key={item.id} type="button" aria-pressed={prompt === item.prompt} onClick={() => chooseTemplate(item)}><item.icon size={14} />{item.title}<ArrowUpRight size={12} /></button>)}</div></div>
             <div className={styles.composerNote}><Sparkles size={13} /><span>No CAD. No learning curve. Just a little imagination.</span></div>
@@ -153,7 +149,7 @@ export function ThingStudio() {
           <div className={styles.previewStage}>
             <div className={styles.stageGrid} aria-hidden="true" />
             <div className={styles.previewTag}><span>{generated ? <Check size={12} /> : <Box size={12} />}{generated ? "PREVIEW READY" : "TRY A LITTLE WHAT-IF"}</span><small>3D / {template.id === "spring" ? "001" : template.id === "buddy" ? "002" : "003"}</small></div>
-            <ProductPreview kind={template.id} color={color.value} logo={logo} />
+            <ProductPreview kind={template.id} color={color.value} logo={null} />
             <span className={styles.modelAnnotation}><i />{template.id === "spring" ? "A little bounce. A lot of you." : template.id === "buddy" ? "For thinking with your hands." : "Your logo. Going places."}</span>
             <div className={styles.stageBottom}><span><Rotate3d size={15} /> Drag to give it a spin</span><span>100% YOU</span></div>
             {generating ? <div className={styles.generatingOverlay}><LoaderCircle className={styles.spin} size={24} /><span>A little imagination in progress...</span></div> : null}
@@ -171,6 +167,6 @@ export function ThingStudio() {
       <footer className={styles.footer}><a href="/make" className={styles.footerLogo}><ThingMark small /> thing.</a><span>A little less scrolling. A little more making.</span><span>BUILT AT NAÏVE × YC <ArrowUpRight size={12} /></span></footer>
     </main>
 
-    {showPrint || showHelp ? <div className={styles.modalBackdrop} onClick={() => { setShowPrint(false); setShowHelp(false); }}><section ref={modalRef} className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="thing-modal-heading" onClick={(event) => event.stopPropagation()}><button className={styles.closeModal} type="button" autoFocus aria-label="Close preview dialog" onClick={() => { setShowPrint(false); setShowHelp(false); }}><X size={20} /></button><div className={styles.modalIcon}>{showPrint ? <Printer size={30} /> : <Rotate3d size={30} />}</div><span className={styles.modalEyebrow}>A LITTLE LOOK AHEAD</span><h2 id="thing-modal-heading">{showPrint ? "Next stop: the real world." : "Go on. Give it a spin."}</h2><p>{showPrint ? "This is the design demo. Your personalized model, print settings, and connected Bambu Lab printer will come together here." : "Drag the model to see it from every angle. Try a template, pick your color, or add a logo to make the sample yours. AI generation and printer connection come next."}</p>{showPrint ? <div className={styles.printSummary}><span>{template.label}<small>{color.name} · {size} · Matte PLA</small></span><Printer size={20} /></div> : null}<button type="button" className={styles.modalAction} onClick={() => { setShowPrint(false); setShowHelp(false); }}>Keep making <ArrowRight size={16} /></button></section></div> : null}
+    {showPrint || showHelp ? <div className={styles.modalBackdrop} onClick={() => { setShowPrint(false); setShowHelp(false); }}><section ref={modalRef} className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="thing-modal-heading" onClick={(event) => event.stopPropagation()}><button className={styles.closeModal} type="button" autoFocus aria-label="Close preview dialog" onClick={() => { setShowPrint(false); setShowHelp(false); }}><X size={20} /></button><div className={styles.modalIcon}>{showPrint ? <Printer size={30} /> : <Rotate3d size={30} />}</div><span className={styles.modalEyebrow}>A LITTLE LOOK AHEAD</span><h2 id="thing-modal-heading">{showPrint ? "Next stop: the real world." : "Go on. Give it a spin."}</h2><p>{showPrint ? "This is the design demo. Your personalized model, print settings, and connected Bambu Lab printer will come together here." : "Drag the model to see it from every angle. Try a template or pick your color to make the sample yours. AI generation and printer connection come next."}</p>{showPrint ? <div className={styles.printSummary}><span>{template.label}<small>{color.name} · {size} · Matte PLA</small></span><Printer size={20} /></div> : null}<button type="button" className={styles.modalAction} onClick={() => { setShowPrint(false); setShowHelp(false); }}>Keep making <ArrowRight size={16} /></button></section></div> : null}
   </div>;
 }

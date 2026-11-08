@@ -77,10 +77,9 @@
 .composer textarea { display: block; width: 100%; min-height: 83px; resize: vertical; border: 0; padding: 0; outline: none; background: transparent; color: var(--thing-ink); font-size: 16px; font-weight: 500; line-height: 1.5; letter-spacing: -.4px; }
 .composer textarea::placeholder { color: #838177; opacity: 1; }
 .composer textarea:focus-visible { outline: none; }
-.composerToolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; }
-.attachButton { display: flex; align-items: center; gap: 5px; min-height: 42px; max-width: 45%; border: 0; padding: 0; background: transparent; color: #56554e; font-size: 10px; font-weight: 700; }
-.attachButton span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.makeButton { display: flex; align-items: center; justify-content: space-between; gap: 22px; min-height: 44px; border: 2px solid var(--thing-ink); border-radius: 0; padding: 0 16px; color: var(--thing-ink); background: var(--thing-acid); font-size: 11px; font-weight: 850; letter-spacing: .02em; text-transform: uppercase; }
+.composerToolbar { margin-top: 14px; }
+.makeButton { display: flex; align-items: center; justify-content: space-between; gap: 22px; width: 100%; min-height: 54px; border: 2px solid var(--thing-ink); border-radius: 0; padding: 0 13px 0 18px; color: #fff; background: var(--thing-cobalt); box-shadow: 3px 3px 0 var(--thing-ink); font-size: 14px; font-weight: 850; letter-spacing: .025em; text-transform: uppercase; }
+.makeArrow { flex-shrink: 0; padding: 3px; color: var(--thing-ink); background: var(--thing-acid); }
 .makeButton:disabled { cursor: wait; opacity: .7; }
 .templates { display: flex; align-items: center; gap: 11px; margin-top: 18px; }
 .templates > span { flex-shrink: 0; color: #626158; font-size: 7px; font-weight: 850; letter-spacing: .8px; }
@@ -217,9 +216,8 @@
   .ideaHeading > span { font-size: 6px; letter-spacing: .4px; }
   .composer { padding: 13px 12px 11px; box-shadow: 4px 4px 0 var(--thing-ink); }
   .composer textarea { min-height: 66px; font-size: 16px; line-height: 1.4; }
-  .composerToolbar { margin-top: 10px; gap: 7px; }
-  .makeButton { min-height: 43px; padding: 0 12px; gap: 18px; font-size: 10px; }
-  .attachButton { min-height: 43px; font-size: 9px; }
+  .composerToolbar { margin-top: 10px; }
+  .makeButton { min-height: 51px; padding: 0 12px 0 15px; gap: 18px; font-size: 13px; }
   .templates { margin-top: 16px; gap: 8px; }
   .templates > span { font-size: 6px; }
   .templates > div { width: 100%; gap: 5px; }
