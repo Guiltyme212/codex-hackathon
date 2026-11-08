@@ -124,7 +124,7 @@ export function ThingStudio() {
     <main className={styles.main}>
       <section className={styles.hero} aria-labelledby="thing-title">
         <div className={styles.heroTopline}><span><i /> YOUR IDEA. MADE REAL.</span><span className={styles.edition}>THE MAKE-IT-YOURS MACHINE <MoveUpRight size={13} /></span></div>
-        <div className={styles.heroHeading}><h1 id="thing-title">Think it.<br className={styles.mobileBreak} /> <em>Make it.</em></h1><div className={styles.heroAside}><p>Describe your idea. Make it yours.<br />Then hold it in your hands.</p><span>From a prompt to your next favorite thing. <ArrowDownLeft size={22} strokeWidth={1.4} /></span></div></div>
+        <div className={styles.heroHeading}><h1 id="thing-title">Think it. <em>Make it.</em></h1><div className={styles.heroAside}><p>Your idea. Designed, printed, yours.</p><span>From a prompt to your next favorite thing. <ArrowDownLeft size={22} strokeWidth={1.4} /></span></div></div>
       </section>
 
       <div className={styles.workbench}>

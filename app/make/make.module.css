@@ -31,13 +31,13 @@
 .navigation > a, .navigation > button { display: flex; align-items: center; justify-content: center; gap: 22px; padding: 0 28px; border: 0; border-left: 2px solid var(--thing-ink); border-radius: 0; }
 .navigation > button { background: var(--thing-acid); color: var(--thing-ink); text-transform: inherit; font-weight: inherit; font-size: inherit; letter-spacing: inherit; }
 .main { max-width: 1360px; margin: 0 auto; padding: 0 48px; }
-.hero { padding: 36px 0 32px; }
+.hero { padding: 27px 0 26px; }
 .heroTopline { display: flex; align-items: center; justify-content: space-between; font-size: 9px; font-weight: 850; letter-spacing: 1.3px; }
 .heroTopline > span { display: inline-flex; align-items: center; gap: 9px; }
 .heroTopline i { width: 8px; height: 8px; border: 1px solid var(--thing-ink); border-radius: 50%; background: var(--thing-acid); }
 .heroTopline .edition { color: var(--thing-muted); font-size: 8px; letter-spacing: .9px; }
 .heroHeading { display: flex; align-items: center; justify-content: space-between; gap: 35px; margin-top: 23px; }
-.heroHeading h1 { margin: 0; font-size: clamp(72px, 7.8vw, 112px); font-weight: 800; letter-spacing: -.075em; line-height: .95; }
+.heroHeading h1 { margin: 0; font-size: clamp(64px, 7vw, 96px); font-weight: 800; letter-spacing: -.075em; line-height: .95; }
 .heroHeading h1 em { color: var(--thing-cobalt); font-family: "Newsreader Variable", Georgia, serif; font-weight: 450; letter-spacing: -.06em; }
 .mobileBreak { display: none; }
 .heroAside { padding-top: 5px; }
@@ -46,12 +46,12 @@
 .heroAside > span svg { color: var(--thing-cobalt); }
 .workbench { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); align-items: start; gap: 40px; }
 .ideaColumn { min-width: 0; }
-.inspiration { overflow: hidden; border: 2px solid var(--thing-ink); padding: 16px 20px 14px; background-color: #a7aaff; background-image: linear-gradient(#17171412 1px, transparent 1px), linear-gradient(90deg, #17171412 1px, transparent 1px); background-size: 44px 44px; }
+.inspiration { min-width: 0; }
 .sectionLabel { position: relative; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
 .sectionLabel h2 { margin: 0; font-size: 11px; font-weight: 850; letter-spacing: -.2px; text-transform: uppercase; }
 .sectionLabel > span { display: inline-flex; align-items: center; gap: 4px; font-family: monospace; font-size: 7px; letter-spacing: .25px; white-space: nowrap; }
 .videos { display: flex; justify-content: center; align-items: center; isolation: isolate; padding: 18px 7px 23px; }
-.videoCard { position: relative; width: 35%; flex: 0 0 35%; aspect-ratio: .69; min-width: 0; overflow: hidden; isolation: isolate; border: 2px solid var(--thing-ink); border-radius: 0; background: var(--thing-paper); box-shadow: 5px 6px 0 var(--thing-ink); }
+.videoCard { position: relative; width: 35%; flex: 0 0 35%; aspect-ratio: .69; min-width: 0; overflow: hidden; isolation: isolate; border: 2px solid var(--thing-ink); border-radius: 15px; background: var(--thing-paper); box-shadow: 4px 5px 0 var(--thing-ink); }
 .videoCard + .videoCard { margin-left: -2.5%; }
 .videoCard0 { z-index: 1; transform: translateY(7px) rotate(-6deg); }
 .videoCard1 { z-index: 3; transform: translateY(-3px); }
@@ -169,40 +169,36 @@
   .heroAside > span { max-width: 245px; font-size: 9px; }
   .templates { flex-direction: column; align-items: flex-start; }
   .colorOption small { display: none; }
-  .inspiration { padding: 14px; }
   .sectionLabel h2 { font-size: 9px; }
   .sectionLabel > span { font-size: 6px; }
   .how { gap: 30px; }
   .howSteps { gap: 16px; }
 }
 @media (max-width: 760px) {
-  .header { min-height: 62px; }
+  .header { min-height: 56px; }
   .wordmark { gap: 7px; padding: 0 18px; border-right: 0; }
   .wordmark > svg { width: 24px; height: 28px; }
   .wordmark > span { font-size: 27px; letter-spacing: -1.8px; }
   .navigation { font-size: 9px; letter-spacing: .03em; }
   .navigation > a { display: none; }
   .navigation > button { gap: 15px; padding: 0 18px; }
-  .main { max-width: 560px; padding: 0 19px; }
-  .hero { padding: 24px 0 23px; }
-  .heroTopline { font-size: 8px; letter-spacing: .8px; }
-  .heroTopline .edition { display: none; }
-  .heroHeading { display: block; margin-top: 16px; }
-  .heroHeading h1 { font-size: clamp(59px, 16vw, 82px); line-height: .88; letter-spacing: -.075em; }
-  .heroHeading h1 em { display: inline-block; padding-top: 6px; font-size: 1.1em; }
-  .mobileBreak { display: block; }
-  .heroAside { padding-top: 13px; }
-  .heroAside p { font-size: 12px; line-height: 1.5; letter-spacing: -.2px; }
+  .main { max-width: 560px; padding: 0 16px; }
+  .hero { padding: 16px 0 15px; }
+  .heroTopline { display: none; }
+  .heroHeading { display: block; margin-top: 0; }
+  .heroHeading h1 { font-size: clamp(36px, 10.4vw, 54px); line-height: 1; letter-spacing: -.07em; white-space: nowrap; }
+  .heroHeading h1 em { font-size: 1.05em; }
+  .heroAside { padding-top: 7px; }
+  .heroAside p { font-size: 11px; line-height: 1.4; letter-spacing: -.2px; }
   .heroAside > span { display: none; }
   .workbench { display: flex; flex-direction: column; gap: 29px; }
   .ideaColumn { width: 100%; }
-  .inspiration { padding: 12px 13px 11px; }
-  .sectionLabel { margin-bottom: 2px; gap: 5px; }
+  .sectionLabel { margin-bottom: 0; gap: 5px; }
   .sectionLabel h2 { font-size: 9px; letter-spacing: -.2px; }
   .sectionLabel > span { font-size: 6px; letter-spacing: 0; gap: 3px; }
   .sectionLabel > span svg { width: 10px; }
-  .videos { padding: 15px 4px 21px; }
-  .videoCard { aspect-ratio: .67; box-shadow: 3px 4px 0 var(--thing-ink); }
+  .videos { padding: 14px 7px 20px; }
+  .videoCard { aspect-ratio: .64; border-radius: 13px; box-shadow: 3px 4px 0 var(--thing-ink); }
   .videoCard0 { transform: translateY(5px) rotate(-6deg); }
   .videoCard1 { transform: translateY(-2px); }
   .videoCard2 { transform: translateY(5px) rotate(6deg); }
@@ -214,14 +210,13 @@
   .videoCaption > strong { font-size: clamp(12px, 3.5vw, 18px); letter-spacing: -.45px; }
   .videoCaption a { font-size: 5.5px; gap: 1px; margin-top: 6px; }
   .videoCaption a svg { width: 8px; }
-  .inspirationFootnote { font-size: 6px; letter-spacing: .15px; }
-  .inspirationFootnote > span:last-child { font-size: 6px; }
-  .composerSection { margin-top: 25px; }
-  .ideaHeading { margin-bottom: 12px; }
-  .ideaHeading h2 { max-width: 240px; font-size: 24px; letter-spacing: -1.15px; }
+  .inspirationFootnote { display: none; }
+  .composerSection { margin-top: 13px; }
+  .ideaHeading { margin-bottom: 10px; }
+  .ideaHeading h2 { max-width: none; font-size: 20px; letter-spacing: -.9px; }
   .ideaHeading > span { font-size: 6px; letter-spacing: .4px; }
   .composer { padding: 13px 12px 11px; box-shadow: 4px 4px 0 var(--thing-ink); }
-  .composer textarea { min-height: 78px; font-size: 16px; line-height: 1.4; }
+  .composer textarea { min-height: 66px; font-size: 16px; line-height: 1.4; }
   .composerToolbar { margin-top: 10px; gap: 7px; }
   .makeButton { min-height: 43px; padding: 0 12px; gap: 18px; font-size: 10px; }
   .attachButton { min-height: 43px; font-size: 9px; }
@@ -265,7 +260,8 @@
   .main { padding: 0 15px; }
   .wordmark { padding: 0 15px; }
   .navigation > button { padding: 0 13px; gap: 8px; }
-  .ideaHeading h2 { font-size: 22px; max-width: 220px; }
+  .ideaHeading h2 { font-size: 18px; }
+  .ideaHeading > span { display: none; }
   .templates button { font-size: 7px; }
   .colorOption small { display: none; }
 }
