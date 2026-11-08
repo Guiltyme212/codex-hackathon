@@ -4,7 +4,7 @@ Separate route: `/make`. This is a UI prototype for the Naïve × YC Autonomous 
 
 ## Design target
 
-The founder's supplied paper sketch is the primary layout reference: three product videos, an idea input, a preview, and a print action. The existing project's Manrope typography and strong hierarchy carry over. All new styles are isolated in `app/make/make.module.css`.
+The founder's supplied paper sketch is the layout reference: three product videos, an idea input, a preview, and a print action. Content Factory is the visual source: paper canvas, black borders, offset shadows, Manrope headings paired with Newsreader italic, lime actions, and cobalt accents. All new styles are isolated in `app/make/make.module.css`.
 
 Working name: **thing.** It can be changed without touching Content Factory.
 
@@ -12,10 +12,10 @@ Working name: **thing.** It can be changed without touching Content Factory.
 
 - Keep the sketch's video → idea → preview sequence on mobile.
 - Use a light workbench canvas with real product media and a tangible 3D object.
-- Use bold Manrope for headings and plain UI text. Reserve Newsreader for the small product annotation.
-- Tangerine is for making actions and the default filament. Dark green-black is for type and the print action. Filament swatches are product colors, not extra UI accents.
+- Use bold Manrope for headings and plain UI text. Newsreader italic carries the second hero line, matching Content Factory's display typography.
+- Use Content Factory's lime for making and printing actions, cobalt for the display accent, and black for outlines and text. Tangerine remains a filament color.
 - Videos retain creator attribution. No invented customer counts, testimonials, sales, or printer connection status.
-- Rounded surfaces are reserved for media, the editable prompt, and the product preview.
+- Video frames overlap slightly with the center in front and the outer frames tilted six degrees. Keep captions clear of the overlap. Media, prompt, preview, and controls have square corners and black borders.
 
 ## UI behavior
 

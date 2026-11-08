@@ -118,22 +118,21 @@ export function ThingStudio() {
     <a className={styles.skipLink} href="#idea">Skip to your idea</a>
     <header className={styles.header}>
       <a className={styles.wordmark} href="/make" aria-label="thing home"><ThingMark /><span>thing.</span></a>
-      <nav className={styles.navigation} aria-label="Main navigation"><a href="#how">How it works <ArrowUpRight size={13} /></a><button type="button" onClick={() => promptRef.current?.focus()}>Let&apos;s make something <Plus size={16} /></button></nav>
-      <span className={styles.mobileHeaderNote}>A little idea. A real thing.</span>
+      <nav className={styles.navigation} aria-label="Main navigation"><a href="#how">How it works <ArrowUpRight size={13} /></a><button type="button" onClick={() => promptRef.current?.focus()}>Start making <ArrowUpRight size={16} /></button></nav>
     </header>
 
     <main className={styles.main}>
       <section className={styles.hero} aria-labelledby="thing-title">
-        <div className={styles.heroTopline}><span><i /> YOUR IMAGINATION. OFF THE SCREEN.</span><span className={styles.edition}>THE MAKE-IT-YOURS MACHINE <MoveUpRight size={13} /></span></div>
-        <div className={styles.heroHeading}><h1 id="thing-title">Think it.<br className={styles.mobileBreak} /> Make it<span className={styles.period}>.</span></h1><div className={styles.heroAside}><p>That little &quot;what if&quot; in your head?<br />Let&apos;s turn it into something you can hold.</p><span>One idea. Endless possibilities. <ArrowDownLeft size={22} strokeWidth={1.4} /></span></div></div>
+        <div className={styles.heroTopline}><span><i /> YOUR IDEA. MADE REAL.</span><span className={styles.edition}>THE MAKE-IT-YOURS MACHINE <MoveUpRight size={13} /></span></div>
+        <div className={styles.heroHeading}><h1 id="thing-title">Think it.<br className={styles.mobileBreak} /> <em>Make it.</em></h1><div className={styles.heroAside}><p>Describe your idea. Make it yours.<br />Then hold it in your hands.</p><span>From a prompt to your next favorite thing. <ArrowDownLeft size={22} strokeWidth={1.4} /></span></div></div>
       </section>
 
       <div className={styles.workbench}>
         <div className={styles.ideaColumn}>
           <section className={styles.inspiration} aria-labelledby="inspiration-heading">
-            <div className={styles.sectionLabel}><h2 id="inspiration-heading">A little inspiration to get you going</h2><span><VolumeX size={12} /> SOUND OFF. IDEAS ON.</span></div>
+            <div className={styles.sectionLabel}><h2 id="inspiration-heading">A little inspiration.</h2><span><VolumeX size={12} /> SOUND OFF. IDEAS ON.</span></div>
             <div className={styles.videos}>{inspirations.map((item, index) => <InspirationVideo item={item} index={index} key={item.id} />)}</div>
-            <div className={styles.inspirationFootnote}><span>Everyday problems. Unexpected solutions.</span><span>Now, your turn <ArrowDown size={12} /></span></div>
+            <div className={styles.inspirationFootnote}><span>SMALL IDEAS. REAL OBJECTS.</span><span>Now, your turn <ArrowDown size={12} /></span></div>
           </section>
 
           <section className={styles.composerSection} id="idea" aria-labelledby="idea-heading">

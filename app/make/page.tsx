@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description: "Turn your little what-if into a real, 3D-printed thing. Get inspired, make it yours, and preview your next creation.",
 };
 
-export const viewport: Viewport = { themeColor: "#faf9f6" };
+export const viewport: Viewport = { themeColor: "#f4f0e8" };
 
 export default function MakePage() {
   return <ThingStudio />;
